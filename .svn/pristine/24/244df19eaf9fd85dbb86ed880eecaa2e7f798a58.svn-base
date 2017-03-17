@@ -1,0 +1,44 @@
+package com.fable.dsp.dao.system.network.impl;
+
+import java.util.List;
+
+import org.hibernate.Criteria;
+import org.hibernate.Query;
+import org.hibernate.criterion.DetachedCriteria;
+import org.hibernate.criterion.Restrictions;
+import org.springframework.stereotype.Repository;
+
+import com.fable.dsp.common.constants.CommonConstants;
+import com.fable.dsp.common.dto.network.NetworkInfo;
+import com.fable.dsp.core.dao.hibernate.GenericDaoHibernate;
+import com.fable.dsp.dao.system.network.intf.NetworkOutInfoDao;
+import com.fable.dsp.dmo.system.networkcfg.NetworkOutInfo;
+
+@Repository("networkOutInfoDao")
+public class NetworkOutInfoDaoHibernate extends
+		GenericDaoHibernate<NetworkOutInfo> implements NetworkOutInfoDao {
+
+	
+
+	@Override
+	public NetworkOutInfo getLastNetWorkOutInfo() {
+		List<?> list = getHibernateTemplate().findByCriteria(
+				DetachedCriteria.forClass(NetworkOutInfo.class));
+		return (NetworkOutInfo) list.get(list.size() - 1);
+	}
+
+	@Override
+	public void saveOrUpdate(NetworkOutInfo entity) {
+		getHibernateTemplate().saveOrUpdate(entity);
+	}
+
+	@Override
+	public NetworkOutInfo findByCardInfo(String inCard, String outCard) {
+		DetachedCriteria criteria = DetachedCriteria
+				.forClass(NetworkOutInfo.class);
+		criteria.add(Restrictions.eq("now_gap_card", inCard));
+		criteria.add(Restrictions.eq("now_outer_card", outCard));
+		return (NetworkOutInfo) getHibernateTemplate().findByCriteria(criteria)
+				.get(0);
+	}
+}

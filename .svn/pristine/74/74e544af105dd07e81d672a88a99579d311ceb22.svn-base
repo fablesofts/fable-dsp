@@ -1,0 +1,219 @@
+package com.fable.dsp.dmo.system.networkcfg;
+
+import java.io.Serializable;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
+import javax.persistence.TableGenerator;
+
+import com.fable.dsp.core.entity.AuditEntity;
+
+/**
+ * 网闸配置表
+ * 
+ * @author 吴浩
+ * 
+ */
+@Entity
+@Table(name = "NET_GAP_CONFIG")
+public class NetworkGapInfo extends AuditEntity implements Serializable {
+
+	private static final long serialVersionUID = 8512128995707340637L;
+
+	/**
+	 * ID编号
+	 */
+	@TableGenerator(name = "netGapConfigGen", table = "SYS_ID_GEN", pkColumnName = "GEN_KEY", valueColumnName = "GEN_VALUE", pkColumnValue = "NET_GAP_CONFIG_ID", allocationSize = 1)
+	@Id
+	@GeneratedValue(strategy = GenerationType.TABLE, generator = "netGapConfigGen")
+	protected Long id;
+
+	@Column(name = "GAP_NO")
+	protected Long gap_no;
+
+	/**
+     * 网闸名称
+     */
+    @Column(name = "GAP_NAME")
+    protected String gap_name;
+	
+	/**
+	 * 网闸对内口设备名称
+	 */
+	@Column(name = "GAP_INNER_NAME")
+	protected String gap_inner_name;
+	/**
+	 * 网闸对外口设备名称
+	 */
+	@Column(name = "GAP_OUTER_NAME")
+	protected String gap_outer_name;
+	/**
+	 * 网闸对内口设备IP
+	 */
+	@Column(name = "INNER_IP")
+	protected String inner_ip;
+	/**
+	 * 网闸对外口设备IP
+	 */
+	@Column(name = "OUTER_IP")
+	protected String outer_ip;
+
+	@Column(name = "FLOW")
+	protected Long flow;
+
+	@Column(name = "GAP_STATUS")
+	protected String gap_status;
+	
+	/**
+     * 数据交换端口.
+     */
+    @Column(name="SERVICE_PORT")
+    protected Long servicePort;
+    
+    /**
+     * 应用服务代理对内端口.
+     */
+    @Column(name="INNER_PROXY_PORT")
+    protected Long innerProxyPort;
+    
+    /**
+     * 应用服务代理对外端口.
+     */
+    @Column(name="OUTER_PROXY_PORT")
+    protected Long outerProxyPort;
+	
+	@Column(name="EXT")
+	protected String ext;
+
+	@Column(name = "DEL_FLAG")
+	protected String del_flag;
+
+	@Override
+	public Long getId() {
+		return id;
+	}
+
+	@Override
+	public void setId(Long id) {
+		this.id = id;
+	}
+
+	public Long getGap_no() {
+		return gap_no;
+	}
+
+	public void setGap_no(Long gap_no) {
+		this.gap_no = gap_no;
+	}
+
+	public String getInner_ip() {
+		return inner_ip;
+	}
+
+	public void setInner_ip(String inner_ip) {
+		this.inner_ip = inner_ip;
+	}
+
+	public String getOuter_ip() {
+		return outer_ip;
+	}
+
+	public void setOuter_ip(String outer_ip) {
+		this.outer_ip = outer_ip;
+	}
+
+	public Long getFlow() {
+		return flow;
+	}
+
+	public void setFlow(Long flow) {
+		this.flow = flow;
+	}
+
+	public String getGap_status() {
+		return gap_status;
+	}
+
+	public void setGap_status(String gap_status) {
+		this.gap_status = gap_status;
+	}
+
+	public String getExt() {
+		return ext;
+	}
+
+	public void setExt(String ext) {
+		this.ext = ext;
+	}
+
+	public String getDel_flag() {
+		return del_flag;
+	}
+
+	public void setDel_flag(String del_flag) {
+		this.del_flag = del_flag;
+	}
+
+	public String getGap_inner_name() {
+		return gap_inner_name;
+	}
+
+	public void setGap_inner_name(String gap_inner_name) {
+		this.gap_inner_name = gap_inner_name;
+	}
+
+	public String getGap_outer_name() {
+		return gap_outer_name;
+	}
+    
+    public void setGap_outer_name(String gap_outer_name) {
+        this.gap_outer_name = gap_outer_name;
+    }
+
+    
+    public Long getServicePort() {
+        return servicePort;
+    }
+
+    
+    public void setServicePort(Long servicePort) {
+        this.servicePort = servicePort;
+    }
+
+    
+    public Long getInnerProxyPort() {
+        return innerProxyPort;
+    }
+
+    
+    public void setInnerProxyPort(Long innerProxyPort) {
+        this.innerProxyPort = innerProxyPort;
+    }
+
+    
+    public Long getOuterProxyPort() {
+        return outerProxyPort;
+    }
+
+    
+    public void setOuterProxyPort(Long outerProxyPort) {
+        this.outerProxyPort = outerProxyPort;
+    }
+
+    
+    public String getGap_name() {
+        return gap_name;
+    }
+
+    
+    public void setGap_name(String gap_name) {
+        this.gap_name = gap_name;
+    }
+	
+    
+
+}

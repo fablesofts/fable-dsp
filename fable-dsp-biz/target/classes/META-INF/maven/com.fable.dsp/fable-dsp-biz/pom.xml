@@ -1,0 +1,148 @@
+<?xml version="1.0"?>
+<project
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
+	xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>com.fable.dsp</groupId>
+		<artifactId>fable-dsp</artifactId>
+		<version>0.0.1-SNAPSHOT</version>
+	</parent>
+	<artifactId>fable-dsp-biz</artifactId>
+	<name>fable-dsp-biz</name>
+	<url>http://maven.apache.org</url>
+	<dependencies>
+		<dependency>
+			<groupId>com.fable.dsp</groupId>
+			<artifactId>fable-dsp-common</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.10</version>
+			<scope>test</scope>
+		</dependency>
+		<!-- 添加RMI的CLIENT -->
+		<dependency>
+			<groupId>com.fable.outer</groupId>
+			<artifactId>fable-outer-rmi</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
+		<!-- 添加ftp-server -->
+		<dependency>
+			<groupId>com.fable.hamal</groupId>
+			<artifactId>ftpserver</artifactId>
+			<version>1.0.0-SNAPSHOT</version>
+		</dependency>
+		
+		<!-- 添加common-beanutils包 -->
+		<dependency>
+			<groupId>commons-beanutils</groupId>
+			<artifactId>commons-beanutils</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>commons-lang</groupId>
+			<artifactId>commons-lang</artifactId>
+		</dependency>
+		<!-- 
+		  <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+        </dependency>
+		<dependency>
+			<groupId>log4j</groupId>
+			<artifactId>log4j</artifactId>
+			<scope>test</scope>
+		</dependency>
+ -->
+ <!-- modify logger -->
+ <dependency>  
+  <groupId>ch.qos.logback</groupId>  
+  <artifactId>logback-core</artifactId>  
+  <version>1.0.0</version>  
+</dependency>  
+<dependency>  
+  <groupId>ch.qos.logback</groupId>  
+  <artifactId>logback-classic</artifactId>  
+  <version>1.0.0</version>  
+</dependency>  
+  
+<dependency>  
+  <groupId>ch.qos.logback</groupId>  
+  <artifactId>logback-access</artifactId>  
+  <version>1.0.0</version>  
+</dependency>  
+<dependency>  
+  <groupId>org.slf4j</groupId>  
+  <artifactId>slf4j-api</artifactId>  
+  <version>1.6.2</version>  
+</dependency>  
+  
+<!--jul桥接 用来输出 Java Logging Framework (JUL) -->  
+<dependency>  
+  <groupId>org.slf4j</groupId>  
+  <artifactId>jul-to-slf4j</artifactId>  
+  <version>1.6.2</version>  
+</dependency>  
+  
+<!-- jcl桥接，用来输出 第三方Jakarta Commons Logging (JCL) -->  
+<dependency>  
+   <groupId>org.slf4j</groupId>  
+  <artifactId>jcl-over-slf4j</artifactId>  
+  <version>1.6.2</version>  
+</dependency>  
+ <!-- modify logger -->
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>commons-logging</groupId>
+			<artifactId>commons-logging</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId> org.aspectj</groupId>
+			<artifactId> aspectjweaver</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<!-- oracle的驱动 手动添加到私服中 -->
+		<dependency>
+			<groupId>com.oracle</groupId>
+			<artifactId>ojdbc6</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<!--mysql的驱动 -->
+		<dependency>
+			<groupId>mysql</groupId>
+			<artifactId>mysql-connector-java</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-io</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>commons-dbcp</groupId>
+			<artifactId>commons-dbcp</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>javassist</groupId>
+			<artifactId>javassist</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>com.fable.dsp</groupId>
+			<artifactId>fable-dsp-dmo</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
+	</dependencies>
+</project>

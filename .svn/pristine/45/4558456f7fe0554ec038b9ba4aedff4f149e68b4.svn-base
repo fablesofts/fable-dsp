@@ -1,0 +1,66 @@
+package com.fable.dsp.dao.system.network.impl;
+
+import java.util.List;
+
+import org.hibernate.Query;
+import org.springframework.stereotype.Repository;
+
+import com.fable.dsp.common.constants.CommonConstants;
+import com.fable.dsp.common.dto.network.NetworkInfo;
+import com.fable.dsp.core.dao.hibernate.GenericDaoHibernate;
+import com.fable.dsp.dao.system.network.intf.NetGroupInfoDao;
+import com.fable.dsp.dao.system.network.intf.NetworkGapInfoDao;
+import com.fable.dsp.dmo.system.networkcfg.NetGroupInfo;
+import com.fable.dsp.dmo.system.networkcfg.NetworkGapInfo;
+
+@Repository("networkGapInfoDao")
+public class NetworkGapInfoDaoHibernate extends
+		GenericDaoHibernate<NetworkGapInfo> implements NetworkGapInfoDao {
+
+	/**
+	 * 通过条件查找多条
+	 * 
+	 * @param InterestInfo
+	 * @return
+	 */
+	@Override
+	public List<NetworkGapInfo> listDataSourceInfoListByConditions(
+			NetworkGapInfo source) {
+		// TODO Auto-generated method stub
+		return getHibernateTemplate().findByExample(source);
+	}
+
+	/**
+	 * 通过条件修改
+	 * 
+	 * @param InterestInfo
+	 * @return
+	 */
+	@Override
+	public boolean updateByConditions(NetworkInfo entity) {
+
+		String hql = null;
+		if (CommonConstants.GAPCARD_TO_IN.equals(entity.getCard_type())) {
+			hql = "update NetworkGapInfo as d set d.gap_inner_name = :name,d.inner_ip = :ip where d.id = :id";
+		} else if (CommonConstants.GAPCARD_TO_OUT.equals(entity.getCard_type())) {
+			hql = "update NetworkGapInfo as d set d.gap_outer_name = :name,d.outer_ip = :ip where d.id = :id";
+		}
+
+		Query sq = getHibernateTemplate().getSessionFactory().openSession()
+				.createQuery(hql);
+		sq.setParameter("name", entity.getName());
+		sq.setParameter("ip", entity.getServer_ip());
+		sq.setParameter("id", entity.getId());
+		int num = sq.executeUpdate();
+		if (num > 0)
+			return true;
+		else
+			return false;
+	}
+
+	@Override
+	public void saveOrUpdate(NetworkGapInfo entity) {
+		getHibernateTemplate().saveOrUpdate(entity);
+	}
+
+}

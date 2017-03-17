@@ -1,0 +1,18 @@
+package com.fable.dsp.dao.system.network.intf;
+
+import java.util.List;
+
+import com.fable.dsp.core.dao.GenericDao;
+import com.fable.dsp.dmo.system.networkcfg.NetGroupInfo;
+
+public interface NetGroupInfoDao extends GenericDao<NetGroupInfo> {
+	
+	/**
+	 * 通过条件查找多条
+	 * 
+	 * @param InterestInfo
+	 * @return
+	 */
+	List<NetGroupInfo> listDataSourceInfoListByConditions(NetGroupInfo source);
+	
+}

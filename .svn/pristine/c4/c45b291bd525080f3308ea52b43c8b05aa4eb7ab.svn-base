@@ -1,0 +1,280 @@
+package com.fable.dsp.dmo.system.networkcfg;
+
+import java.io.Serializable;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
+import javax.persistence.TableGenerator;
+
+import com.fable.dsp.core.entity.AuditEntity;
+
+/**
+ * 内交换网络配置表.
+ * 
+ * @author 吴浩
+ * 
+ */
+
+@Entity
+@Table(name = "NET_INNER_CONFIG")
+public class NetworkInnInfo extends AuditEntity implements Serializable {
+
+	private static final long serialVersionUID = -7575836489229045046L;
+
+	/**
+	 * ID编号
+	 */
+	@TableGenerator(name = "netInnerConfigGen", table = "SYS_ID_GEN", pkColumnName = "GEN_KEY", valueColumnName = "GEN_VALUE", pkColumnValue = "NET_INNER_CONFIG_ID", allocationSize = 1)
+	@Id
+	@GeneratedValue(strategy = GenerationType.TABLE, generator = "netInnerConfigGen")
+	protected Long id;
+
+	@Column(name = "HOSTNAME")
+	protected String hostname;
+	/**
+	 * 内交换对网闸网卡IP
+	 */
+	@Column(name = "TO_GAP_IP")
+	protected String to_gap_ip;
+	/**
+	 * 内交换对网闸网卡MASK
+	 */
+	@Column(name = "TO_GAP_MASK")
+	protected String to_gap_mask;
+	/**
+	 * 内交换对网闸网卡GATEWAY
+	 */
+	@Column(name = "TO_GAP_GATEWAY")
+	protected String to_gap_gateway;
+	/**
+	 * 内交换对内网网卡IP
+	 */
+	@Column(name = "TO_INNERNET_IP")
+	protected String to_innernet_ip;
+	/**
+	 * 内交换对内网网卡MASK
+	 */
+	@Column(name = "TO_INNERNET_MASK")
+	protected String to_innernet_mask;
+	/**
+	 * 内交换对内网网卡GATEWAY
+	 */
+	@Column(name = "TO_INNERNET_GATEWAY")
+	protected String to_innernet_gateway;
+	/**
+	 * 当前保存的内网网卡名称
+	 */
+	@Column(name = "NOW_INN_CARD")
+	protected String now_inn_card;
+	/**
+	 * 当前保存的对网闸网卡名称
+	 */
+	@Column(name = "NOW_OUT_CARD")
+	protected String now_out_card;
+	
+	/**
+	 * 数据交换对内端口.
+	 */
+	@Column(name="SERVICE_IN_PORT")
+	protected Long serviceInPort;
+	
+	/**
+     * 数据交换对外端口.
+     */
+    @Column(name="SERVICE_OUT_PORT")
+    protected Long serviceOutPort;
+	
+	/**
+	 * 应用服务代理对内端口.
+	 */
+	@Column(name="INNER_PROXY_PORT")
+    protected Long innerProxyPort;
+	
+	/**
+	 * 应用服务代理对外端口.
+	 */
+	@Column(name="OUTER_PROXY_PORT")
+    protected Long outerProxyPort;
+	
+	
+	@Column(name="STATUS")
+	protected Long status;
+
+	@Column(name = "TYPE")
+	protected Long type;
+
+	@Column(name = "EXT")
+	protected String ext;
+
+	@Override
+	public Long getId() {
+
+	    return id;
+	}
+
+	@Override
+	public void setId(Long id) {
+
+	    this.id = id;
+	}
+
+	public String getTo_gap_ip() {
+	    
+		return to_gap_ip;
+	}
+
+	public void setTo_gap_ip(String to_gap_ip) {
+	    
+		this.to_gap_ip = to_gap_ip;
+	}
+
+	public String getTo_gap_mask() {
+	    
+		return to_gap_mask;
+	}
+
+	public void setTo_gap_mask(String to_gap_mask) {
+	    
+		this.to_gap_mask = to_gap_mask;
+	}
+
+	public String getTo_innernet_ip() {
+		return to_innernet_ip;
+	}
+
+	public void setTo_innernet_ip(String to_innernet_ip) {
+	    
+		this.to_innernet_ip = to_innernet_ip;
+	}
+
+	public String getTo_innernet_mask() {
+	    
+		return to_innernet_mask;
+	}
+
+	public void setTo_innernet_mask(String to_innernet_mask) {
+	    
+		this.to_innernet_mask = to_innernet_mask;
+	}
+
+	public String getTo_innernet_gateway() {
+	    
+		return to_innernet_gateway;
+	}
+
+	public void setTo_innernet_gateway(String to_innernet_gateway) {
+	    
+		this.to_innernet_gateway = to_innernet_gateway;
+	}
+
+	public Long getStatus() {
+	    
+		return status;
+	}
+
+	public void setStatus(Long status) {
+	    
+		this.status = status;
+	}
+
+	public Long getType() {
+	    
+		return type;
+	}
+
+	public void setType(Long type) {
+	    
+		this.type = type;
+	}
+
+	public String getExt() {
+		return ext;
+	}
+
+	public void setExt(String ext) {
+		this.ext = ext;
+	}
+
+	public String getTo_gap_gateway() {
+		return to_gap_gateway;
+	}
+
+	public void setTo_gap_gateway(String to_gap_gateway) {
+		this.to_gap_gateway = to_gap_gateway;
+	}
+
+	public String getNow_inn_card() {
+		return now_inn_card;
+	}
+
+	public void setNow_inn_card(String now_inn_card) {
+		this.now_inn_card = now_inn_card;
+	}
+
+	public String getNow_out_card() {
+		return now_out_card;
+	}
+
+	public void setNow_out_card(String now_out_card) {
+		this.now_out_card = now_out_card;
+	}
+
+    public Long getInnerProxyPort() {
+        return innerProxyPort;
+    }
+
+    
+    public void setInnerProxyPort(Long innerProxyPort) {
+        this.innerProxyPort = innerProxyPort;
+    }
+
+    
+    public Long getOuterProxyPort() {
+        return outerProxyPort;
+    }
+
+    
+    public void setOuterProxyPort(Long outerProxyPort) {
+        this.outerProxyPort = outerProxyPort;
+    }
+
+    
+    public Long getServiceInPort() {
+        return serviceInPort;
+    }
+
+    
+    public void setServiceInPort(Long serviceInPort) {
+        this.serviceInPort = serviceInPort;
+    }
+
+    
+    public Long getServiceOutPort() {
+        return serviceOutPort;
+    }
+
+    
+    public void setServiceOutPort(Long serviceOutPort) {
+        this.serviceOutPort = serviceOutPort;
+    }
+
+    
+    public String getHostname() {
+        return hostname;
+    }
+
+    
+    public void setHostname(String hostname) {
+        this.hostname = hostname;
+    }
+
+    
+
+    
+    
+	
+}

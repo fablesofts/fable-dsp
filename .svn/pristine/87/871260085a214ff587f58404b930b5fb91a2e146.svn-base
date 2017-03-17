@@ -1,0 +1,22 @@
+package com.fable.dsp.service.system.network.intf;
+
+import java.util.List;
+
+import com.fable.dsp.core.service.GenericService;
+import com.fable.dsp.dmo.system.networkcfg.NetGroupInfo;
+
+public interface NetGroupInfoService extends GenericService<NetGroupInfo>  {
+	/**
+	 * 通过条件查找多条
+	 * 
+	 * @param InterestInfo
+	 * @return List
+	 */
+	List<NetGroupInfo> listDataSourceInfoListByConditions(NetGroupInfo source);
+
+	/**
+	 * 添加或修改方法
+	 * @param gi
+	 */
+	void saveOrUpdate(NetGroupInfo gi);
+}

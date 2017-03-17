@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?><project-modules id="moduleCoreId" project-version="1.5.0">
+    <wb-module deploy-name="fable-dsp-war">
+        <wb-resource deploy-path="/" source-path="/target/m2e-wtp/web-resources"/>
+        <wb-resource deploy-path="/" source-path="/src/main/webapp" tag="defaultRootSource"/>
+        <wb-resource deploy-path="/WEB-INF/classes" source-path="/src/main/java"/>
+        <wb-resource deploy-path="/WEB-INF/classes" source-path="/src/main/resources"/>
+        <dependent-module archiveName="fable-dsp-web-0.0.1-SNAPSHOT.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/fable-dsp-web/fable-dsp-web">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="fable-dsp-security-0.0.1-SNAPSHOT.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/fable-dsp-security/fable-dsp-security">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="fable-dsp-biz-0.0.1-SNAPSHOT.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/fable-dsp-biz/fable-dsp-biz">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="fable-dsp-common-0.0.1-SNAPSHOT.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/fable-dsp-common/fable-dsp-common">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="fable-outer-rmi-0.0.1-SNAPSHOT.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/fable-outer-rmi/fable-outer-rmi">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="ftpserver-1.0.0-SNAPSHOT.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/ftpserver/ftpserver">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="fable-dsp-dmo-0.0.1-SNAPSHOT.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/fable-dsp-dmo/fable-dsp-dmo">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="fable-dsp-core-0.0.1-SNAPSHOT.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/fable-dsp-core/fable-dsp-core">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="shuttle.proxy-1.0.0-SNAPSHOT.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/shuttle.proxy/shuttle.proxy">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="shuttle.common-1.0.0-SNAPSHOT.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/shuttle.common/shuttle.common">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="shuttle.communication-1.0.0-SNAPSHOT.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/shuttle.communication/shuttle.communication">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <property name="context-root" value="dsp"/>
+        <property name="java-output-path" value="/fable-dsp-war/target/classes"/>
+    </wb-module>
+</project-modules>

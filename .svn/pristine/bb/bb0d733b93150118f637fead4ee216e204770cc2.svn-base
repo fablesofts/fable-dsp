@@ -1,0 +1,55 @@
+package com.fable.dsp.service.system.network.intf;
+
+import java.util.List;
+
+import org.springframework.beans.BeansException;
+
+import com.fable.dsp.common.dto.network.NetCardDto;
+import com.fable.dsp.common.dto.network.NetworkInfo;
+import com.fable.dsp.core.service.GenericService;
+import com.fable.dsp.dmo.system.networkcfg.NetworkOutInfo;
+
+public interface NetworkOutInfoService extends GenericService<NetworkOutInfo> {
+	/**
+	 * 展示外交换网卡信息
+	 * @param innId（外交换ID）
+	 * @return NetworkOutInfo(返回外交换实体类)
+	 */
+	NetworkOutInfo showOuterNetwork(Long outId);
+	
+	/**
+	 * 获得外交换网卡数量
+	 * @return List
+	 */
+	List getOutNetCard();
+	
+	
+	   
+    /**
+     * 根据网卡名称，查询网卡信息
+     * @return
+     * @throws Exception 
+     */
+    NetworkInfo getOneCard(String card) throws Exception;
+
+	/**
+	 * @author majy
+	 */
+	NetworkOutInfo getLastNetWorkOutInfo();
+
+	/**
+	 * 添加或修改方法
+	 * @param netOut
+	 */
+	void saveOrUpdate(NetworkOutInfo netOut);
+
+	/**
+	 * @author majy
+	 * 使网卡生效
+	 * @param outCard
+	 */
+	void effictNetCard (NetCardDto outCard) throws BeansException ;
+
+	NetworkOutInfo findByCardInfo(String name, String name2);
+	
+}

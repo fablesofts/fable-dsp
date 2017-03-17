@@ -1,0 +1,76 @@
+package com.fable.dsp.dao.system.network.impl;
+
+import java.util.List;
+
+import org.hibernate.Query;
+import org.hibernate.criterion.DetachedCriteria;
+import org.springframework.stereotype.Repository;
+
+import com.fable.dsp.common.constants.CommonConstants;
+import com.fable.dsp.common.dto.network.NetworkInfo;
+import com.fable.dsp.core.dao.hibernate.GenericDaoHibernate;
+import com.fable.dsp.dao.system.network.intf.NetGroupInfoDao;
+import com.fable.dsp.dao.system.network.intf.NetworkInnInfoDao;
+import com.fable.dsp.dmo.system.networkcfg.NetGroupInfo;
+import com.fable.dsp.dmo.system.networkcfg.NetworkInnInfo;
+
+@Repository("networkCfgInfoDao")
+public class NetworkCfgInfoDaoHibernate extends
+		GenericDaoHibernate<NetworkInnInfo> implements NetworkInnInfoDao {
+
+	/**
+	 * 通过条件查找多条
+	 * 
+	 * @param InterestInfo
+	 * @return
+	 */
+	@Override
+	public List<NetworkInnInfo> listDataSourceInfoListByConditions(
+			NetworkInnInfo source) {
+
+		return getHibernateTemplate().findByExample(source);
+	}
+
+	/**
+	 * 通过条件修改
+	 * 
+	 * @param entity
+	 * @return
+	 */
+	@Override
+	public boolean updateByConditions(NetworkInfo entity) {
+		String hql = null;
+		String cardname = null;
+		if (CommonConstants.INNERCARD_TO_IN.equals(entity.getCard_type())) {
+			hql = "update NetworkInnInfo as d set d.now_inn_card = :card,d.to_innernet_ip = :ip,d.to_innernet_mask = :mask,d.to_innernet_gateway = :gateway where d.id = :id";
+		} else if (CommonConstants.INNERCARD_TO_OUT.equals(entity
+				.getCard_type())) {
+			hql = "update NetworkInnInfo as d set d.now_out_card = :card,d.to_gap_ip = :ip,d.to_gap_mask = :mask,d.to_gap_gateway = :gateway where d.id = :id";
+		}
+		Query sq = getHibernateTemplate().getSessionFactory().openSession()
+				.createQuery(hql);
+		sq.setParameter("card", entity.getCard_inner());
+		sq.setParameter("ip", entity.getServer_ip());
+		sq.setParameter("mask", entity.getMask());
+		sq.setParameter("gateway", entity.getGateway());
+		sq.setParameter("id", entity.getId());
+		int num = sq.executeUpdate();
+		if (num > 0)
+			return true;
+		else
+			return false;
+	}
+
+	@Override
+	public void saveOrUpdate(NetworkInnInfo entity) {
+		getHibernateTemplate().saveOrUpdate(entity);
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public List<NetworkInnInfo> findAll() {
+		return getHibernateTemplate().findByCriteria(
+				DetachedCriteria.forClass(NetworkInnInfo.class));
+	}
+
+}

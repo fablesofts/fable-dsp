@@ -1,0 +1,22 @@
+package com.fable.dsp.dao.system.network.impl;
+
+import java.util.List;
+
+import org.springframework.stereotype.Repository;
+
+import com.fable.dsp.core.dao.hibernate.GenericDaoHibernate;
+import com.fable.dsp.dao.system.network.intf.NetGroupInfoDao;
+import com.fable.dsp.dmo.system.networkcfg.NetGroupInfo;
+
+@Repository("netGroupInfoDao")
+public class NetGroupInfoDaoHibernate extends GenericDaoHibernate<NetGroupInfo> implements NetGroupInfoDao   {
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public List<NetGroupInfo> listDataSourceInfoListByConditions(
+			NetGroupInfo netg) {
+		return getHibernateTemplate().findByExample(netg);
+	}
+
+	
+}

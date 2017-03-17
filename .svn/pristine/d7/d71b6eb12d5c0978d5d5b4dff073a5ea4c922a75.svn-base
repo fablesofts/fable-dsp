@@ -1,0 +1,28 @@
+package com.fable.dsp.dao.system.network.intf;
+
+import com.fable.dsp.core.dao.GenericDao;
+import com.fable.dsp.dmo.system.networkcfg.NetworkOutInfo;
+
+public interface NetworkOutInfoDao extends GenericDao<NetworkOutInfo> {
+
+	/**
+	 * @author majy 查询最新的
+	 * @return
+	 */
+	NetworkOutInfo getLastNetWorkOutInfo();
+
+	/**
+	 * @author majy
+	 * @param entity
+	 */
+	void saveOrUpdate(NetworkOutInfo entity);
+
+	/**
+	 * @author majy
+	 * 根据网卡名查找
+	 * @param inCard
+	 * @param outCard
+	 * @return
+	 */
+	NetworkOutInfo findByCardInfo(String inCard, String outCard);
+}

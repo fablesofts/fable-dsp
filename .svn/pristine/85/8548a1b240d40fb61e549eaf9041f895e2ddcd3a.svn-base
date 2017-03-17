@@ -1,0 +1,820 @@
+<%@ page language="java" import="java.util.*" pageEncoding="utf-8"%>
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>网络配置</title>
+        <style type="text/css">
+            fieldset{
+                display: block;
+                float: left;
+            }
+            form{
+                display: block;
+            }
+            form div{
+                clear: both;
+            }
+            form fieldset p{
+                margin-top: 10px;
+            }
+            form fieldset div{
+                padding-top: 10px;
+                padding-bottom: 10px;
+            }
+            form fieldset div{
+                margin:0 auto;
+            }
+            form fieldset div a{
+                margin:0 auto;
+                display: block;
+            }
+            form fieldset p span{
+                width: 60px;
+                display: inline-block;
+                text-align: center;
+                margin-right: 10px;
+            }
+            #netconfigTop * {
+                float: left;
+                width: 23%;
+                height: 40%;
+                margin-top: 15%;
+                margin-left: 5%;
+                cursor: pointer;
+            }
+            #netconfigTop {
+                position: relative;
+                width: 750px;
+                height: 400px;
+                margin-top: -50px;
+                margin-left: auto;
+                margin-right: auto;
+                background-image: url(easyui/img.jpg);
+            }
+        </style>
+    </head>
+    <body>
+        <!-- 该页面整个dom都依赖的js -->
+        <script type="text/javascript">
+            // 给String的对象添加一个去空格的方法
+            String.prototype.trim = function() {
+                return this.replace(/(^\s*)|(\s*$)/g, '');
+            };
+            //FormValidator类，用来验证表单。
+            //_url提交地址
+            //_frm，form元素
+            function FormValidator(_url, _frm) {
+                this.url = _url;
+                this.frm = _frm;
+            }
+            ;
+            //获取根据_valName这个表单元素的value。
+            FormValidator.prototype.getVal = function(_valName) {
+                return this.frm[0][_valName].value;
+            };
+            //验证IP地址的方法
+            //_val是元素的name
+            //_label是元素的说明(只包含名称)
+            //如果验证通过，返回空字符串(空字符串会自动转为true)。如果不通过，返回错误信息，同时将url情况，防止提交到后台。
+            FormValidator.prototype.isIp = function(_val, _label) {
+                var _err = "";
+                _val = this.getVal(_val);
+                if (_val) {
+                    if (!FormValidator.ipPattern.test(_val.trim())) {
+                        this.url = "";
+                        _err += (_label + "不是合法的IP    ");
+                    }
+                } else {
+                    this.url = "";
+                    _err += (_label + "不能为空    ");
+                }
+                return _err;
+            };
+            //验证是否为空的方法
+            FormValidator.prototype.isNotEmpty = function(_val, _label) {
+                var _err = "";
+                _val = this.getVal(_val);
+                if (_val && _val !== '请选择') {
+                    if (_val.trim()) {
+                    } else {
+                        this.url = "";
+                        _err += (_label + "不能为空    ");
+                    }
+                } else {
+                    this.url = "";
+                    _err += (_label + "不能为空    ");
+                }
+                return _err;
+            };
+            //IP地址正则表达式
+            FormValidator.ipPattern = /^(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])$/;
+            //相当于main方法
+            onload = function() {
+                //初始化id=netconfigTop按钮，让它能保存
+                NetConfigNav.init();
+                //隐藏网闸的div
+                $('#exchangeServerContext').hide();
+                //隐藏内服务器的div
+                $('#inServerContext').hide();
+                //初始化内服务器对象，使上面的功能可以运行
+            };
+            var LoadForm = {};
+            LoadForm.loadText = function(_jquery, dom) {
+                for (var v in dom) {
+                    if (_jquery[v]) {
+                        if ($(_jquery[v]).attr("type") !== "select") {
+                            _jquery[v].value = dom[v];
+                        }
+                    }
+                }
+            };
+            LoadForm.loadSelect=function(_jquery,dom,name){
+                //for(var i=0;i<)
+                for(var i=0;_jquery.children().length;++i){
+                	if(_jquery.children()[i].value===dom[name]){
+                		_jquery[0].selectedIndex=i;
+                	}
+                }
+            };
+        </script>
+        <!-- 导航部分(事件源部分) -->
+        <div id="netconfigTop">
+            <script type="text/javascript">
+                //NetConfigNav对象(导航模块)封装和id为netconfigTop有关的细节
+                var NetConfigNav = {};
+                //隐藏所有图片对应的div
+                NetConfigNav.hideAll = function() {
+                    $('#outServerContext').hide();
+                    $('#exchangeServerContext').hide();
+                    $('#inServerContext').hide();
+                };
+                //让这个对象上的所有动作都可以保存
+                //所有init方法只在刷新的时候调用
+                NetConfigNav.init = function() {
+                    NetConfigNav.addClickListener();
+                    $('#netconfigTop div').css({'border': '0px', 'z-index': '-999', 'opacity': '0.1'});
+                };
+                //给导航器绑定事件。
+                NetConfigNav.addClickListener = function() {
+                    $('#netconfigTop div').bind({
+                        //event封装了事件的信息
+                        click: function(event) {
+                            //如果该浏览器不支持event，就是window.event。
+                            //该写法相当于三元运算符，是js内行的风格。
+                            //_e=event?event:window.event。第一个event转为布尔类型，
+                            var _e = (event || window.event);
+                            //e.target表示事件源。
+                            //将js对象转为jquery对象。
+                            var source = $(_e.target);
+                            //source对象触发事件后，引起target对象发生一些动作，如显示，隐藏。
+                            var target = $('#' + source.attr('id') + 'Context');
+                            //点击source对象之后，如果target对象是显示的，则隐藏。如果是隐藏的，就显示
+                            if (target.is(':visible')) {
+                                NetConfigNav.hideAll();
+                            } else {
+                                NetConfigNav.hideAll();
+                                target.show();
+                                ExchangeServer.show();
+                                InServer.show();
+                                OutServer.show();
+                            }
+                        },
+                        //鼠标悬浮和移走，都会改变透明度等样式
+                        mouseover: function(event) {
+                            var _e = (event || window.event);
+                            var source = $(_e.target);
+                            source.css({'border': '3px solid grey', 'z-index': '999', 'opacity': '0.3'});
+                        },
+                        mouseout: function(event) {
+                            var _e = (event || window.event);
+                            var source = $(_e.target);
+                            source.css({'border': '0px', 'z-index': '-999', 'opacity': '0.1'});
+                            source.html('');
+                        }
+                    });
+                };
+            </script>
+            <!-- 这三个div作为click等事件的触发器(按钮)，注意命名，通过命名和下面的div联系起来，才可以互动。 -->
+            <div id="outServer" style="background-color: maroon;opacity:0.1"></div>
+            <div id="exchangeServer" style="background-color: orange;opacity:0.1"></div>
+            <div id="inServer" style="background-color: blue;opacity:0.1"></div>
+        </div>
+
+        <!-- 外服务器事件源的响应事件在这个div中 ，风格是easy ui的tab-->
+        <div id="outServerContext" class="easyui-tabs" >
+            <script type="text/javascript">
+                //该对象封装外服务器的信息
+                var OutServer = {};
+                //存放外服务器的Dto对象的数组
+                OutServer.cardList = [];
+                OutServer.dmo = {};
+                //显示信息，并从数据库中读取数据加载到表单中
+                OutServer.show = function() {
+                    OutServer.init();
+                    $.get('${pageContext.request.contextPath}/networkCfg/showLastOutServer', null, function(_data) {
+                        if (_data.outServer) {
+                            OutServer.dmo = _data.outServer;
+                            LoadForm.loadText($('#form_outer'), OutServer.dmo);
+                            LoadForm.loadSelect($('#form_outer fieldset p select[name="now_gap_card"]'), InServer.dmo,'now_gap_card');
+                            LoadForm.loadSelect($('#form_in fieldset p select[name="now_outer_card"]'), InServer.dmo,'now_outer_card');
+                        } else {
+                            throw new Error('数据表为空');
+                        }
+                    }, 'json');
+                };
+                //存储到数据库中
+                OutServer.save = function() {
+                    //创建一个FormValidator对象。方便校验和提交
+                    var frm = new FormValidator('${pageContext.request.contextPath}/networkCfg/saveOutServer', $('#form_outer'));
+                    //验证表单元素，如果验证不通过，将url设置为""不让它提交。
+                    var _err = frm.isNotEmpty('now_gap_card', '对内网卡');
+                    _err += frm.isIp('to_gap_ip', '对内IP');
+                    _err += frm.isIp('to_gap_mask', '对内子网掩码');
+                    _err += frm.isIp('to_gap_gateway', '对内网关');
+
+                    _err += frm.isNotEmpty('now_outer_card', '对外网卡');
+                    _err += frm.isIp('to_outernet_ip', '对外IP');
+                    _err += frm.isIp('to_outernet_mask', '对外子网掩码');
+                    _err += frm.isIp('to_outernet_gateway', '对外网关');
+                    //如果_err不是空字符串，则说明校验不通过。并且中止请求
+                    if (_err) {
+                        $.messager.show({
+                            title: '提示信息',
+                            msg: _err,
+                            showType: 'show'
+                        });
+                        return;
+                    }
+                    $.ajax({
+                        url: frm.url,
+                        type: 'post',
+                        dataType: 'json',
+                        //$('#form_outer')表单元素转为json对象
+                        data: $('#form_outer').serializeArray(),
+                        success: function(_data) {
+                            if (_data && _data.flag) {
+                                $.messager.show({
+                                    title: '提示信息',
+                                    msg: '保存成功.',
+                                    showType: 'show'
+                                });
+                            } else {
+                                $.messager.show({
+                                    title: '提示信息',
+                                    msg: '保存失败.',
+                                    showType: 'show'
+                                });
+                            }
+                        }
+                    });
+                };
+                OutServer.init = function() {
+                    OutServer.initCombox();
+                    OutServer.bindCombox();
+                };
+                //加载网卡信息，放在cardList中，并给conbox添加选项。
+                OutServer.initCombox = function() {
+                    $.get('${pageContext.request.contextPath}/networkCfg/getRmiCardInfo', null, function(_data) {
+                        var $inCard = $('#form_outer fieldset p select[name="now_gap_card"]');
+                        $inCard.append('<option value="">请选择</option>');
+                        OutServer.cardList = _data;
+                        for (var v in _data) {
+                            $inCard.append('<option value=' + OutServer.cardList[v].name + '>' + OutServer.cardList[v].name + '</option>');
+                        }
+                        var $outCard = $('#form_outer fieldset p select[name="now_outer_card"]');
+                        $outCard.html($inCard.html());
+                    }, 'json');
+                };
+                //如果select的值改变，自动给表单的其它元素赋(这个选项卡所对应的原始)值
+                //通用于外服务器的所有选项卡
+                OutServer.bindCombox = function() {
+                    //获取元素
+                    var _inCombox = $('#form_outer fieldset p select[name="now_gap_card"]');
+                    var _inIp = $('#form_outer fieldset p input[name="to_gap_ip"]');
+                    var _inMask = $('#form_outer fieldset p input[name="to_gap_mask"]');
+                    var _inGateway = $('#form_outer fieldset p input[name="to_gap_gateway"]');
+                    //绑定change事件
+                    _inCombox.change(function() {
+                        //在cardList中查找，如果选项卡元素值和ipconfig查出来的对应，就加载信息
+                        for (var v in OutServer.cardList) {
+                            if (OutServer.cardList[v].name === _inCombox.val()) {
+                                _inMask.val(OutServer.cardList[v].subnetMask);
+                                _inIp.val(OutServer.cardList[v].ip);
+                                _inGateway.val(OutServer.cardList[v].defaultGateway);
+                            }
+                        }
+                    });
+                    //同上
+                    var _outCombox = $('select[name="now_outer_card"]');
+                    var _outIp = $('#form_outer fieldset p input[name="to_outernet_ip"]');
+                    var _outMask = $('#form_outer fieldset p input[name="to_outernet_mask"]');
+                    var _outGateway = $('#form_outer fieldset p input[name="to_outernet_gateway"]');
+                    _outCombox.change(function() {
+                        for (var v in OutServer.cardList) {
+                            if (OutServer.cardList[v].name === _outCombox.val()) {
+                                _outMask.val(OutServer.cardList[v].subnetMask);
+                                _outIp.val(OutServer.cardList[v].ip);
+                                _outGateway.val(OutServer.cardList[v].defaultGateway);
+                            }
+                        }
+                    });
+                };
+                //使修改后的网卡保存，js的逻辑同上
+                OutServer.effictInnerCard = function() {
+                    var frm = new FormValidator('${pageContext.request.contextPath}/networkCfg/effiectRmiCard', $('#form_outer'));
+                    var _err = frm.isNotEmpty('now_gap_card', '对内网卡');
+                    _err += frm.isIp('to_gap_ip', '对内IP');
+                    _err += frm.isIp('to_gap_mask', '对内子网掩码');
+                    _err += frm.isIp('to_gap_gateway', '对内网关');
+                    if (_err) {
+                        $.messager.show({
+                            title: '提示信息',
+                            msg: _err,
+                            showType: 'show'
+                        });
+                        return;
+                    }
+                    $.ajax({
+                        url: frm.url,
+                        type: 'post',
+                        dataType: 'json',
+                        data: {name: frm.getVal('now_gap_card'),
+                            ip: frm.getVal('to_gap_ip'),
+                            subnetMask: frm.getVal('to_gap_mask'),
+                            defaultGateway: frm.getVal('to_gap_gateway')
+                        },
+                        success: function(_data) {
+                            if (_data) {
+                                $.messager.show({
+                                    title: '提示信息',
+                                    msg: '更新保存.',
+                                    showType: 'show'
+                                });
+                            } else {
+                                $.messager.show({
+                                    title: '提示信息',
+                                    msg: '更新失败.',
+                                    showType: 'show'
+                                });
+                            }
+                        }
+                    });
+                };
+                //通过远程调用，使修改后的网卡保存，js的逻辑同上。
+                OutServer.effictOuterCard = function() {
+                    var frm = new FormValidator('${pageContext.request.contextPath}/networkCfg/effiectRmiCard', $('#form_outer'));
+                    var _err = frm.isNotEmpty('now_outer_card', '对外网卡');
+                    _err += frm.isIp('to_outernet_ip', '对外IP');
+                    _err += frm.isIp('to_outernet_mask', '对外子网掩码');
+                    _err += frm.isIp('to_outernet_gateway', '对外网关');
+                    if (_err) {
+                        $.messager.show({
+                            title: '提示信息',
+                            msg: _err,
+                            showType: 'show'
+                        });
+                        return;
+                    }
+                    $.ajax({
+                        url: frm.url,
+                        type: 'post',
+                        dataType: 'json',
+                        data: {name: frm.getVal('now_outer_card'),
+                            ip: frm.getVal('to_outernet_ip'),
+                            subnetMask: frm.getVal('to_outernet_mask'),
+                            defaultGateway: frm.getVal('to_outernet_gateway')
+                        },
+                        success: function(_data) {
+                            if (_data) {
+                                $.messager.show({
+                                    title: '提示信息',
+                                    msg: '更新保存.',
+                                    showType: 'show'
+                                });
+                            } else {
+                                $.messager.show({
+                                    title: '提示信息',
+                                    msg: '更新失败.',
+                                    showType: 'show'
+                                });
+                            }
+                        }
+                    });
+                };
+            </script>
+            <div title="外服务器配置" data-options="iconCls:'icon-edit',fit:true">
+                <form id="form_outer" name="form_outer">
+                    <fieldset>
+                        <legend>网卡(内)</legend>
+                        <p>
+                            <span>网卡</span>
+                            <select name="now_gap_card"></select><font color="red"><b>*</b></font>
+                        </p>
+                        <p>
+                            <span>IP</span>
+                            <input name="to_gap_ip"/><font color="red"><b>*</b></font>
+                        </p>
+                        <p>
+                            <span>掩码</span>
+                            <input name="to_gap_mask"/><font color="red"><b>*</b></font>
+                        </p>
+                        <p>
+                            <span>网关</span>
+                            <input name="to_gap_gateway" />
+                        </p>
+                        <div>
+                            <a href="javascript:OutServer.effictInnerCard()" class="easyui-linkbutton" data-options="iconCls:'icon-save'" >保存</a>
+                        </div>
+                    </fieldset>
+                    <fieldset>
+                        <legend>网卡(外)</legend>
+                        <p>
+                            <span>网卡</span>
+                            <select name="now_outer_card"></select><font color="red"><b>*</b></font>
+                        </p>
+                        <p>
+                            <span>IP</span>
+                            <input name="to_outernet_ip"/><font color="red"><b>*</b></font>
+                        </p>
+                        <p>
+                            <span>掩码</span>
+                            <input name="to_outernet_mask"/><font color="red"><b>*</b></font>
+                        </p>
+                        <p>
+                            <span>网关</span>
+                            <input name="to_outernet_gateway"/>
+                        </p>
+                        <div>
+                            <a href="javascript:OutServer.effictOuterCard()" class="easyui-linkbutton" data-options="iconCls:'icon-save'" >保存</a>
+                        </div>
+                    </fieldset>
+                    <fieldset>
+                        <legend>端口</legend>
+                        <p>
+                            <span>机器名</span>
+                            <input name="net_name" />
+                        </p>
+                        <p>
+                            <span>内通道端口</span>
+                            <input name="innerProxyPort" class="easyui-numberbox"/><font color="red"><b>*</b></font>
+                        </p>
+                        <p>
+                            <span>外通道端口</span>
+                            <input name="outerProxyPort" class="easyui-numberbox"/><font color="red"><b>*</b></font>
+                        </p>
+                        <p>
+                            <span>业务端口</span>
+                            <input name="servicePort" class="easyui-numberbox"/><font color="red"><b>*</b></font>
+                        </p>
+                        <div>
+                            <a href="javascript:OutServer.save()" class="easyui-linkbutton" data-options="iconCls:'icon-save'" >保存</a>
+                        </div>
+                    </fieldset>
+                </form>
+            </div>
+        </div>
+
+        <!-- 网闸 事件源的响应事件在这个div中 ，风格是easy ui的tab -->
+        <div id="exchangeServerContext" class="easyui-tabs" >
+            <script type="text/javascript">
+                //定义一个对象
+                var ExchangeServer = {};
+                //定义对象的方法
+                ExchangeServer.show = function() {
+                    $.get('${pageContext.request.contextPath}/networkCfg/showLastGap', null, function(_data) {
+                        if (_data.gap) {
+                            $('#form_exchangeServer').form('load', _data.gap);
+                        }
+                    }, 'json');
+                };
+                ExchangeServer.save = function() {
+                    $.ajax({
+                        url: '${pageContext.request.contextPath}/networkCfg/saveExchangeServer',
+                        type: 'post',
+                        dataType: 'json',
+                        data: $('#form_exchangeServer').serializeArray(),
+                        success: function(_data) {
+                            if (_data && _data.flag) {
+                                $.messager.show({
+                                    title: '提示信息',
+                                    msg: '保存成功.',
+                                    showType: 'show'
+                                });
+                            } else {
+                                $.messager.show({
+                                    title: '提示信息',
+                                    msg: '保存失败.',
+                                    showType: 'show'
+                                });
+                            }
+                        }
+                    });
+                };
+            </script>
+            <div title="网闸配置" data-options="iconCls:'icon-edit',fit:true">
+                <form id="form_exchangeServer" name="form_exchangeServer">
+                    <fieldset>
+                        <legend>网卡</legend>
+                        <p>
+                            <span>对内网卡</span>
+                            <input name="gap_inner_name" /><font color="red"><b>*</b></font>
+                        </p>
+                        <p>
+                            <span>对内IP</span>
+                            <input name="inner_ip" /><font color="red"><b>*</b></font>
+                        </p>
+                        <p>
+                            <span>对外网卡</span>
+                            <input name="gap_outer_name" /><font color="red"><b>*</b></font>
+                        </p>
+                        <p>
+                            <span>对外IP</span>
+                            <input name="outer_ip" /><font color="red"><b>*</b></font>
+                        </p>
+                        <div>
+                            <a href="javascript:ExchangeServer.save()" class="easyui-linkbutton" data-options="iconCls:'icon-save'" >保存</a>    
+                        </div>
+                    </fieldset>
+                    <fieldset>
+                        <legend>端口</legend>
+                        <p>
+                            <span>外通道端口</span>
+                            <input name="outerProxyPort" class="easyui-numberbox"/><font color="red"><b>*</b></font>
+                        </p>
+                        <p>
+                            <span>内通道端口</span>
+                            <input name="innerProxyPort" class="easyui-numberbox"/><font color="red"><b>*</b></font>
+                        </p>
+                        <p>
+                            <span>业务端口</span>
+                            <input name="servicePort" class="easyui-numberbox"/><font color="red"><b>*</b></font>
+                        </p>
+                        <div>
+                            <a href="javascript:ExchangeServer.save()" class="easyui-linkbutton" data-options="iconCls:'icon-save'" >保存</a>    
+                        </div>
+                    </fieldset>
+                </form>
+            </div>
+        </div>
+
+        <!-- 内服务器事件源的响应事件在这个div中 ，风格是easy ui的tab -->
+        <div id="inServerContext" class="easyui-tabs" >
+            <script type="text/javascript">
+                //该对象封装了与inServerContext相关的操作
+                var InServer = {};
+                InServer.cardList = [];
+                InServer.save = function() {
+                    var frm = new FormValidator('${pageContext.request.contextPath}/networkCfg/saveInServer', $('#form_in'));
+                    var _err = frm.isNotEmpty('now_inn_card', '对内网卡');
+                    _err += frm.isIp('to_innernet_ip', '对内IP');
+                    _err += frm.isIp('to_innernet_mask', '对内子网掩码');
+                    _err += frm.isIp('to_innernet_mask', '对内网管');
+
+                    _err += frm.isNotEmpty('now_out_card', '对外网卡');
+                    _err += frm.isIp('to_gap_ip', '对外IP');
+                    _err += frm.isIp('to_gap_mask', '对外子网掩码');
+                    _err += frm.isIp('to_gap_gateway', '对外网关');
+                    if (_err) {
+                        $.messager.show({
+                            title: '提示信息',
+                            msg: _err,
+                            showType: 'show'
+                        });
+                        return;
+                    }
+                    $.ajax({
+                        url: frm.url,
+                        type: 'post',
+                        dataType: 'json',
+                        data: $('#form_in').serializeArray(),
+                        success: function(_data) {
+                            if (_data && _data.flag) {
+                                $.messager.show({
+                                    title: '提示信息',
+                                    msg: '保存成功.',
+                                    showType: 'show'
+                                });
+                            } else {
+                                $.messager.show({
+                                    title: '提示信息',
+                                    msg: '保存失败.',
+                                    showType: 'show'
+                                });
+                            }
+                        }
+                    });
+                };
+                InServer.show = function() {
+                    InServer.init();
+                    $.get('${pageContext.request.contextPath}/networkCfg/showLastInServer', null, function(_data) {
+                        if (_data.inServer) {
+                            InServer.dmo = _data.inServer;
+                            LoadForm.loadText($('#form_in'), InServer.dmo);
+                            LoadForm.loadSelect($('#form_in fieldset p select[name="now_inn_card"]'), InServer.dmo,'now_inn_card');
+                            LoadForm.loadSelect($('#form_in fieldset p select[name="now_out_card"]'), InServer.dmo,'now_out_card');
+                        }
+                    }, 'json');
+                };
+                InServer.init = function() {
+                    InServer.initCombox();
+                    InServer.bindCombox();
+                };
+                InServer.initCombox = function() {
+                    $.get('${pageContext.request.contextPath}/networkCfg/getCardInfo', null, function(_data) {
+                        var $inCard = $('#form_in fieldset p select[name="now_inn_card"]');
+                        $inCard.append('<option value="">请选择</option>');
+                        InServer.cardList = _data;
+                        for (var v in _data) {
+                            $inCard.append('<option value=' + InServer.cardList[v].name + '>' + InServer.cardList[v].name + '</option>');
+                        }
+                        var $outCard = $('#form_in fieldset p select[name="now_out_card"]');
+                        $outCard.html($inCard.html());
+                    }, 'json');
+                };
+                InServer.bindCombox = function() {
+                    var _inCombox = $('#form_in fieldset p select[name="now_inn_card"]');
+                    var _inIp = $('#form_in fieldset p input[name="to_innernet_ip"]');
+                    var _inMask = $('#form_in fieldset p input[name="to_innernet_mask"]');
+                    var _inGateway = $('#form_in fieldset p input[name="to_innernet_gateway"]');
+                    _inCombox.change(function() {
+                        for (var v in InServer.cardList) {
+                            if (InServer.cardList[v].name === _inCombox.val()) {
+                                _inMask.val(InServer.cardList[v].subnetMask);
+                                _inIp.val(InServer.cardList[v].ip);
+                                _inGateway.val(InServer.cardList[v].defaultGateway);
+                            }
+                        }
+                    });
+                    var _outCombox = $('#form_in fieldset p select[name="now_out_card"]');
+                    var _outIp = $('#form_in fieldset p input[name="to_gap_ip"]');
+                    var _outMask = $('#form_in fieldset p input[name="to_gap_mask"]');
+                    var _outGateway = $('#form_in fieldset p input[name="to_gap_gateway"]');
+                    _outCombox.change(function() {
+                        for (var v in InServer.cardList) {
+                            if (InServer.cardList[v].name === _outCombox.val()) {
+                                _outMask.val(InServer.cardList[v].subnetMask);
+                                _outIp.val(InServer.cardList[v].ip);
+                                _outGateway.val(InServer.cardList[v].defaultGateway);
+                            }
+                        }
+                    });
+                };
+                InServer.effictInnerCard = function() {
+                    var frm = new FormValidator('${pageContext.request.contextPath}/networkCfg/effiectCard', $('#form_in'));
+                    var _err = frm.isNotEmpty('now_inn_card', '对内网卡');
+                    _err += frm.isIp('to_innernet_ip', '对内IP');
+                    _err += frm.isIp('to_innernet_mask', '对内子网掩码');
+                    _err += frm.isIp('to_innernet_mask', '对内网管');
+                    if (_err) {
+                        $.messager.show({
+                            title: '提示信息',
+                            msg: _err,
+                            showType: 'show'
+                        });
+                        return;
+                    }
+                    $.ajax({
+                        url: frm.url,
+                        type: 'post',
+                        dataType: 'json',
+                        data: {name: frm.getVal('now_inn_card'),
+                            ip: frm.getVal('to_innernet_ip'),
+                            subnetMask: frm.getVal('to_innernet_mask'),
+                            defaultGateway: frm.getVal('to_innernet_gateway')
+                        },
+                        success: function(_data) {
+                            if (_data) {
+                                $.messager.show({
+                                    title: '提示信息',
+                                    msg: '更新保存.',
+                                    showType: 'show'
+                                });
+                            } else {
+                                $.messager.show({
+                                    title: '提示信息',
+                                    msg: '更新失败.',
+                                    showType: 'show'
+                                });
+                            }
+                        }
+                    });
+                };
+                InServer.effictOuterCard = function() {
+                    var frm = new FormValidator('${pageContext.request.contextPath}/networkCfg/effiectCard', $('#form_in'));
+                    var _err = frm.isNotEmpty('now_out_card', '对外网卡');
+                    _err += frm.isIp('to_gap_ip', '对外IP');
+                    _err += frm.isIp('to_gap_mask', '对外子网掩码');
+                    _err += frm.isIp('to_gap_gateway', '对外网关');
+                    if (_err) {
+                        $.messager.show({
+                            title: '提示信息',
+                            msg: _err,
+                            showType: 'show'
+                        });
+                        return;
+                    }
+                    $.ajax({
+                        url: frm.url,
+                        type: 'post',
+                        dataType: 'json',
+                        data: {name: frm.getVal('now_out_card'),
+                            ip: frm.getVal('to_gap_ip'),
+                            subnetMask: frm.getVal('to_gap_mask'),
+                            defaultGateway: frm.getVal('to_gap_gateway')
+                        },
+                        success: function(_data) {
+                            if (_data) {
+                                $.messager.show({
+                                    title: '提示信息',
+                                    msg: '更新保存.',
+                                    showType: 'show'
+                                });
+                            } else {
+                                $.messager.show({
+                                    title: '提示信息',
+                                    msg: '更新失败.',
+                                    showType: 'show'
+                                });
+                            }
+                        }
+                    });
+                };
+            </script>
+            <div title="内服务器配置" data-options="iconCls:'icon-edit',fit:true">
+                <form id="form_in" name="form_in">
+                    <input type="hidden" name="id"/>
+                    <fieldset>
+                        <legend>网卡(内)</legend>
+                        <p>
+                            <span>网卡</span>
+                            <select name="now_inn_card" ></select><font color="red"><b>*</b></font>
+                        </p>
+                        <p>
+                            <span>IP</span>
+                            <input name="to_innernet_ip" /><font color="red"><b>*</b></font>
+                        </p>
+                        <p>
+                            <span>掩码</span>
+                            <input name="to_innernet_mask" /><font color="red"><b>*</b></font>
+                        </p>
+                        <p>
+                            <span>网关</span>
+                            <input name="to_innernet_gateway"><font color="red"><b>*</b></font>
+                        </p>
+                        <div>
+                            <a href="javascript:InServer.effictInnerCard()" class="easyui-linkbutton" data-options="iconCls:'icon-save'" >保存</a>
+                        </div>
+                    </fieldset>
+                    <fieldset>
+                        <legend>网卡(外)</legend>
+                        <p>
+                            <span>网卡</span>
+                            <select name="now_out_card" ></select><font color="red"><b>*</b></font>
+                        </p>
+                        <p>
+                            <span>IP</span>
+                            <input name="to_gap_ip" /><font color="red"><b>*</b></font>
+                        </p>
+                        <p>
+                            <span>掩码</span>
+                            <input name="to_gap_mask" /><font color="red"><b>*</b></font>
+                        </p>
+                        <p>
+                            <span>网关</span>
+                            <input name="to_gap_gateway"><font color="red"><b>*</b></font>
+                        </p>
+                        <div>
+                            <a href="javascript:InServer.effictOuterCard()" class="easyui-linkbutton" data-options="iconCls:'icon-save'" >保存</a>
+                        </div>
+                    </fieldset>
+                    <fieldset>
+                        <legend>端口</legend>
+                        <p>
+                            <span>机器名</span>
+                            <input name="hostname" /><font color="red"><b>*</b></font>
+                        </p>
+                        <p>
+                            <span>内通道端口</span>
+                            <input name="innerProxyPort" class="easyui-numberbox"/><font color="red"><b>*</b></font>
+                        </p>
+                        <p>
+                            <span>外通道端口</span>
+                            <input name="outerProxyPort" class="easyui-numberbox"/><font color="red"><b>*</b></font>
+                        </p>
+                        <p>
+                            <span>内业务端口</span>
+                            <input name="serviceInPort" class="easyui-numberbox"/><font color="red"><b>*</b></font>
+                        </p>
+                        <p>
+                            <span>外业务端口</span>
+                            <input name="serviceOutPort" class="easyui-numberbox"/>
+                        </p>
+                        <div>
+                            <a href="javascript:InServer.save()" class="easyui-linkbutton" data-options="iconCls:'icon-save'" >保存</a>
+                        </div>
+                    </fieldset>
+                </form>
+            </div>
+        </div>
+    </body>
+</html>

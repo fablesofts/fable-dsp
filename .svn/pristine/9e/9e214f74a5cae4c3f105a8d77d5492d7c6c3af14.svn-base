@@ -1,0 +1,62 @@
+<?xml version="1.0"?>
+<project
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
+	xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>com.fable.dsp</groupId>
+		<artifactId>fable-dsp</artifactId>
+		<version>0.0.1-SNAPSHOT</version>
+	</parent>
+	<artifactId>fable-dsp-common</artifactId>
+	<name>fable-dsp-common</name>
+	<url>http://maven.apache.org</url>
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	</properties>
+	<dependencies>
+		<dependency>
+			<groupId>com.fable.hamal</groupId>
+			<artifactId>shuttle.common</artifactId>
+			<version>1.0.0-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>mysql</groupId>
+			<artifactId>mysql-connector-java</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.oracle</groupId>
+			<artifactId>ojdbc6</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.10</version>
+			<scope>test</scope>
+		</dependency>
+		<!-- 添加common-beanutils包 -->
+        <dependency>
+            <groupId>commons-beanutils</groupId>
+            <artifactId>commons-beanutils</artifactId>
+        </dependency>
+        <!-- 添加springwebmvc依赖 -->
+            <dependency>  
+        <groupId>org.springframework</groupId>  
+        <artifactId>spring-webmvc</artifactId>  
+        <version>3.0.5.RELEASE</version>  
+    </dependency>  
+    <!-- 添加servlet依赖 -->
+     <dependency>
+	<groupId>javax.servlet</groupId>
+	<artifactId>servlet-api</artifactId>
+	<version>2.5</version>
+	<scope>provided</scope>
+  </dependency>
+  <dependency>
+			<groupId>net.sf.json-lib</groupId>
+			<artifactId>json-lib</artifactId>
+			<version>2.3</version>
+			<classifier>jdk15</classifier>
+		</dependency>
+	</dependencies>
+</project>

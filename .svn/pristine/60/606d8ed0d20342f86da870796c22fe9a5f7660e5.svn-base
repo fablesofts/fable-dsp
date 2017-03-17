@@ -1,0 +1,41 @@
+package com.fable.dsp.service.system.network.impl;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.fable.dsp.common.dto.network.NetworkInfo;
+import com.fable.dsp.core.service.GenericServiceImpl;
+import com.fable.dsp.dao.system.network.intf.NetworkGapInfoDao;
+import com.fable.dsp.dmo.system.networkcfg.NetworkGapInfo;
+import com.fable.dsp.service.system.network.intf.NetworkGapInfoService;
+
+@Service("networkGapInfoService")
+public class NetworkGapInfoServiceImpl extends GenericServiceImpl<NetworkGapInfo> implements NetworkGapInfoService{
+
+	@Autowired
+	NetworkGapInfoDao networkGap;
+
+	public void saveOrUpdate(NetworkGapInfo entity) {
+		networkGap.saveOrUpdate(entity);
+	}
+
+	@Override
+	public List<NetworkGapInfo> listDataSourceInfoListByConditions(
+			NetworkGapInfo source) {
+		return networkGap.listDataSourceInfoListByConditions(source);
+	}
+	
+	/**
+     * 按条件修改
+     * @param entity
+     * @return
+     */
+    @Override
+    public boolean updateByConditions(NetworkInfo entity) {
+        
+        return networkGap.updateByConditions(entity);
+    }
+
+}

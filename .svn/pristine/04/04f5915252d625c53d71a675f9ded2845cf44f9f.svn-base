@@ -1,0 +1,33 @@
+package com.fable.dsp.dao.system.network.intf;
+
+import java.util.List;
+
+import com.fable.dsp.common.dto.network.NetworkInfo;
+import com.fable.dsp.core.dao.GenericDao;
+import com.fable.dsp.dmo.system.networkcfg.NetworkInnInfo;
+
+public interface NetworkInnInfoDao extends GenericDao<NetworkInnInfo> {
+	/**
+	 * 通过条件查找多条
+	 * 
+	 * @param InterestInfo
+	 * @return
+	 */
+	List<NetworkInnInfo> listDataSourceInfoListByConditions(NetworkInnInfo source);
+	
+	/**
+	 * 通过条件修改
+	 * @param entity
+	 * @return
+	 */
+	boolean updateByConditions(NetworkInfo entity);
+
+	/**
+	 * @author majy
+	 * @param entity
+	 */
+	void saveOrUpdate(NetworkInnInfo entity);
+
+	List<NetworkInnInfo> findAll();
+	
+}

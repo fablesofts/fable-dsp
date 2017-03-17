@@ -1,0 +1,189 @@
+package com.fable.dsp.common.util;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.Charset;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
+
+import org.slf4j.Logger;
+
+import com.fable.dsp.common.dto.network.NetCardDto;
+
+/**
+ * @author majy
+ * 
+ */
+public class LocalNetworkInfoUtil {
+	private static final Logger log = org.slf4j.LoggerFactory
+			.getLogger(LocalNetworkInfoUtil.class);
+
+	/**
+	 * majy 获取本地网卡信息
+	 * 
+	 * @return
+	 * @throws IOException
+	 */
+	public static List<NetCardDto> getNetCard() throws IOException {
+		List<NetCardDto> stack = new LinkedList<NetCardDto>();
+		String sysName = System.getProperty("os.name").toLowerCase();
+		if (sysName.contains("windows")) {
+			Process scanner = Runtime.getRuntime().exec("ipconfig");
+			BufferedReader reader = new BufferedReader(new InputStreamReader(
+					scanner.getInputStream(), Charset.forName("GBK")));
+			String temp = null;
+			Queue<String> queue = new LinkedList<String>();
+			while ((temp = reader.readLine()) != null) {
+				queue.add(temp);
+				if (queue.size() > 5) {
+					queue.poll();
+				}
+				if (temp.contains("IPv4")) {
+					NetCardDto card = new NetCardDto();
+					card.setIp(temp.split(":")[1].trim());
+					card.setSubnetMask(reader.readLine().split(":")[1].trim());
+					card.setDefaultGateway(reader.readLine().split(":")[1]
+							.trim());
+					card.setName(queue.poll().split(":")[0].trim().replace(" ",
+							"-"));
+					stack.add(card);
+				}
+			}
+			queue.clear();
+			reader.close();
+		} else if (sysName.contains("linux")) {
+			Process process = Runtime.getRuntime().exec("ifconfig");
+			BufferedReader reader = new BufferedReader(new InputStreamReader(
+					process.getInputStream()));
+			String temp = null;
+			while ((temp = reader.readLine()) != null) {
+				NetCardDto card = new NetCardDto();
+				temp = temp.trim().toLowerCase();
+				if (temp.contains("link")) {
+					card.setName(temp.split(" ")[0]);
+					if (card.getName().equals("lo")) {
+						continue;
+					}
+					if ((temp = reader.readLine()) == null) {
+						break;
+					}
+					temp = temp.trim();
+					if (temp.contains("inet addr:")) {
+						temp = temp.split("inet addr:")[1];
+						String[] subTemps = temp.split(" ");
+						card.setIp(subTemps[0].trim());
+						temp = temp.split(card.getIp())[1].trim().toLowerCase();
+						if (temp.contains("bcast:")) {
+							temp = temp.split("bcast:")[1];
+							card.setDefaultGateway(temp.split(" ")[0]);
+							temp = temp.replace(card.getDefaultGateway(), "")
+									.trim();
+						}
+						if (temp.contains("mask:")) {
+							card.setSubnetMask(temp.split("mask:")[1]);
+						}
+						stack.add(card);
+					}
+				}
+				reader.close();
+				process = Runtime.getRuntime().exec("route");
+				reader = new BufferedReader(new InputStreamReader(
+						process.getInputStream()));
+				while ((temp = reader.readLine()) != null) {
+					if (temp.startsWith("default")) {
+						temp = temp.split("default")[1].trim().split(" ")[0];
+						break;
+					}
+				}
+				for (NetCardDto netCardDto : stack) {
+					netCardDto.setDefaultGateway(temp);
+				}
+			}
+		}
+		return stack;
+	}
+
+	/**
+	 * @author majy 使网卡信息生效
+	 */
+	public static void effictNetCard(NetCardDto cardDto) {
+		String cmd = null;
+		String sysName = System.getProperty("os.name").toLowerCase();
+		if (sysName.contains("windows")) {
+			String name = cardDto.getName().split("-", 2)[1].replace("-", " ");
+			cmd = "netsh interface ip set address \"" + name + "\" stat "
+					+ cardDto.getIp() + " " + cardDto.getSubnetMask() + " "
+					+ cardDto.getDefaultGateway() + " 1";
+			try {
+				Runtime.getRuntime().exec(cmd);
+			} catch (IOException e) {
+				// 日志记录
+				log.error(e.getMessage());
+			}
+		} else if (sysName.contains("linux")) {
+			cmd = ("ifconfig ") + cardDto.getName() + " " + cardDto.getIp()
+					+ " netmask " + cardDto.getSubnetMask();
+			try {
+				Runtime.getRuntime().exec(cmd);
+			} catch (IOException e) {
+				// 日志记录
+				log.error(e.getMessage());
+			}
+		}
+	}
+
+	/**
+	 * 设置网卡信息
+	 * 
+	 * @param name
+	 *            网卡名称
+	 * @param ip
+	 *            IP
+	 * @param subCode
+	 *            子网掩码
+	 * @param gateway
+	 *            网关
+	 * @return String
+	 */
+	public static String updateNetCard(String name, String ip, String subCode,
+			String gateway) {
+		String msg = "";
+		String sysName = System.getProperty("os.name").toLowerCase();
+		if (sysName.contains("windows")) {
+			StringBuffer sb = new StringBuffer();
+			sb.append("netsh interface ip set address \"");
+			sb.append(name);
+			sb.append("\" stat ");
+			sb.append(ip);
+			sb.append(" ");
+			sb.append(subCode);
+			sb.append(" ");
+			sb.append(gateway);
+			try {
+				Runtime.getRuntime().exec(sb.toString());
+			} catch (IOException e) {
+				msg = e.getMessage();
+			}
+		} else if (sysName.contains("linux")) {
+			StringBuffer sb = new StringBuffer();
+			sb.append("ifconfig ");
+			sb.append(name);
+			sb.append(" ");
+			sb.append(ip);
+			sb.append(" netmask ");
+			sb.append(subCode);
+			try {
+				Runtime.getRuntime().exec(sb.toString());
+			} catch (IOException e) {
+				msg = e.getMessage();
+				log.error(e.getMessage());
+			}
+		} else {
+			msg = "操作系统类型不匹配";
+		}
+		return msg;
+	}
+
+}

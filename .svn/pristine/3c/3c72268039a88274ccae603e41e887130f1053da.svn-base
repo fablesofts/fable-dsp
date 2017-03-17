@@ -1,0 +1,218 @@
+package com.fable.dsp.service.system.network.impl;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+
+import javax.annotation.Resource;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.fable.dsp.common.constants.SysConfigConstants;
+import com.fable.dsp.common.dto.network.NetCardDto;
+import com.fable.dsp.common.dto.network.NetworkInfo;
+import com.fable.dsp.common.util.SysConfigUtil;
+import com.fable.dsp.core.service.GenericServiceImpl;
+import com.fable.dsp.core.spring.DspPropertyConfigurer;
+import com.fable.dsp.dao.system.network.intf.NetworkOutInfoDao;
+import com.fable.dsp.dmo.system.networkcfg.NetworkOutInfo;
+import com.fable.dsp.service.system.network.intf.NetworkOutInfoService;
+import com.fable.hamal.shuttle.common.utils.rmi.RmiUtil;
+import com.fable.hamal.shuttle.communication.client.Communication;
+import com.fable.hamal.shuttle.communication.event.Event;
+import com.fable.outer.rmi.event.network.NetCardEffictEvent;
+import com.fable.outer.rmi.event.network.NetworkCardCountEvent;
+import com.fable.outer.rmi.event.network.NetworkCardShowEvent;
+
+@Service("networkOutInfoService")
+public class NetworkOutInfoServiceImpl extends
+		GenericServiceImpl<NetworkOutInfo> implements NetworkOutInfoService {
+	private static final Logger logger = LoggerFactory
+			.getLogger(NetworkOutInfoServiceImpl.class);
+	@Resource(name = "client")
+	Communication communication;
+	private static String OUTER_RMI_ADDRESSES = "outer.rmi.addresses";
+
+	@Autowired
+	NetworkOutInfoDao networkOut;
+
+	public void saveOrUpdate(NetworkOutInfo entity) {
+		networkOut.saveOrUpdate(entity);
+	}
+
+	@SuppressWarnings("unchecked")
+	private Map<String, String[]> getNetworkMap() throws Exception {
+		try {
+			return (Map<String, String[]>) communication.call(RmiUtil
+					.getRmiUrl(DspPropertyConfigurer
+							.getDspProperty(OUTER_RMI_ADDRESSES)),
+					new NetworkCardShowEvent());
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			return null;
+		}
+
+	}
+
+	@Override
+	public NetworkOutInfo showOuterNetwork(Long outId) {
+		Map netMap = null;
+		try {
+			netMap = this.getNetworkMap();
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			return new NetworkOutInfo(); // 如果报错了，如通信连不上。就返回一个空的实体
+		}
+		List<String> networkList = new ArrayList<String>();
+		NetworkOutInfo nif = null;
+		if (outId == null)
+			nif = new NetworkOutInfo();
+		else
+			nif = networkOut.getById(outId);
+
+		int i = 0;
+		logger.debug("*****外交换有" + netMap.size() + "块网卡*****");
+		Set<Map.Entry<String, String[]>> set = netMap.entrySet();
+		for (Iterator<Map.Entry<String, String[]>> it = set.iterator(); it
+				.hasNext();) {
+			Map.Entry<String, String[]> entry = (Map.Entry<String, String[]>) it
+					.next();
+			i++;
+			if (nif.getNow_gap_card() == null
+					&& nif.getNow_outer_card() == null) {
+				// 如果是第一次加载页面，表中没有信息，所以直接将前两块网卡展示出来
+				if (i == 1) {
+					nif.setTo_gap_ip(entry.getValue()[0]);
+					nif.setTo_gap_mask(entry.getValue()[1]);
+					nif.setTo_gap_gateway(entry.getValue()[2]);
+					nif.setNow_gap_card(entry.getKey());
+				} else if (i == 2) {
+					nif.setTo_outernet_ip(entry.getValue()[0]);
+					nif.setTo_outernet_mask(entry.getValue()[1]);
+					nif.setTo_outernet_gateway(entry.getValue()[2]);
+					nif.setNow_outer_card(entry.getKey());
+				}
+			}
+			// 如果读取的IP与数据库匹配的一致，则保存
+			if (nif.getNow_gap_card() != null
+					&& nif.getNow_gap_card().equals(entry.getKey())) {
+				nif.setTo_gap_ip(entry.getValue()[0]);
+				nif.setTo_gap_mask(entry.getValue()[1]);
+				nif.setTo_gap_gateway(entry.getValue()[2]);
+				nif.setNow_gap_card(entry.getKey());
+			}
+			// 如果读取的IP与数据库匹配的一致，则保存
+			if (nif.getNow_outer_card() != null
+					&& nif.getNow_outer_card().equals(entry.getKey())) {
+				nif.setTo_outernet_ip(entry.getValue()[0]);
+				nif.setTo_outernet_mask(entry.getValue()[1]);
+				nif.setTo_outernet_gateway(entry.getValue()[2]);
+				nif.setNow_outer_card(entry.getKey());
+			}
+
+			networkList.add(entry.getKey());
+			nif.setId(outId); // 封装ID到实体类
+			logger.debug(entry.getKey() + "--->" + entry.getValue()[0]
+					+ "," + entry.getValue()[1] + "," + entry.getValue()[2]);
+		}
+		nif = formatNetworkCard(nif, netMap);
+		return nif;
+	}
+
+	@Override
+	public List getOutNetCard() {
+		List netList = null;
+		try {
+			String param1 = RmiUtil.getRmiUrl(SysConfigUtil
+					.getSysConfigValue(SysConfigConstants.OUTER_RMI_ADDRESS));
+			Event param2 = new NetworkCardCountEvent();
+			netList = (List) communication.call(param1, param2);
+		} catch (BeansException e) {
+			logger.error(e.getMessage());
+			return new ArrayList();
+		}
+		return netList;
+	}
+
+	/**
+	 * 如果之前保存的网卡不存在，将网卡信息清空
+	 * 
+	 * @param nif
+	 * @param netMap
+	 */
+	private NetworkOutInfo formatNetworkCard(NetworkOutInfo nif,
+			Map<String, String[]> netMap) {
+		String inner = null;
+		String outer = null;
+		final Set<Map.Entry<String, String[]>> set = netMap.entrySet();
+		for (final Entry<String, String[]> entry2 : set) {
+			final Map.Entry<String, String[]> entry = entry2;
+			if (entry.getKey().equals(nif.getNow_gap_card()))
+				inner = entry.getKey();
+			if (entry.getKey().equals(nif.getNow_outer_card()))
+				outer = entry.getKey();
+		}
+		final Set<Map.Entry<String, String[]>> set1 = netMap.entrySet();
+		for (final Entry<String, String[]> entry2 : set1) {
+			final Map.Entry<String, String[]> entry = entry2;
+
+			if (inner == null
+					&& !entry.getKey().equals(nif.getNow_outer_card())) {
+				nif.setTo_gap_ip(entry.getValue()[0]);
+				nif.setTo_gap_mask(entry.getValue()[1]);
+				nif.setTo_gap_gateway(entry.getValue()[2]);
+				nif.setNow_gap_card(entry.getKey());
+			}
+			if (outer == null && !entry.getKey().equals(nif.getNow_gap_card())) {
+				nif.setTo_outernet_ip(entry.getValue()[0]);
+				nif.setTo_outernet_mask(entry.getValue()[1]);
+				nif.setTo_outernet_gateway(entry.getValue()[2]);
+				nif.setNow_outer_card(entry.getKey());
+			}
+		}
+
+		return nif;
+	}
+
+	@Override
+	public NetworkInfo getOneCard(String card) throws Exception {
+
+		Map netMap = this.getNetworkMap();
+		NetworkInfo netcard = new NetworkInfo();
+		final Set<Map.Entry<String, String[]>> set = netMap.entrySet();
+		for (final Entry<String, String[]> entry2 : set) {
+			final Map.Entry<String, String[]> entry = entry2;
+			if (entry.getKey().trim().equals(card.trim())) {
+				netcard.setServer_ip(entry.getValue()[0]);
+				netcard.setMask(entry.getValue()[1]);
+				netcard.setGateway(entry.getValue()[2]);
+			}
+		}
+		return netcard;
+	}
+
+	@Override
+	public NetworkOutInfo getLastNetWorkOutInfo() {
+		return networkOut.getLastNetWorkOutInfo();
+	}
+
+	@Override
+	public void effictNetCard(NetCardDto netCardDto) throws BeansException {
+		String param1 = RmiUtil.getRmiUrl(SysConfigUtil
+				.getSysConfigValue(SysConfigConstants.OUTER_RMI_ADDRESS));
+		Event param2 = new NetCardEffictEvent(netCardDto);
+		communication.call(param1, param2);
+	}
+
+	@Override
+	public NetworkOutInfo findByCardInfo(String inCard, String outCard) {
+		return networkOut.findByCardInfo(inCard, outCard);
+	}
+}

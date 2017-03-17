@@ -1,0 +1,50 @@
+package com.fable.dsp.service.system.network.impl;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.fable.dsp.core.service.GenericServiceImpl;
+import com.fable.dsp.dao.system.network.intf.NetGroupInfoDao;
+import com.fable.dsp.dmo.system.networkcfg.NetGroupInfo;
+import com.fable.dsp.service.system.network.intf.NetGroupInfoService;
+
+@Service("netGroupInfoService")
+public class NetGroupInfoServiceImpl extends GenericServiceImpl<NetGroupInfo>
+		implements NetGroupInfoService {
+
+	@Autowired
+	NetGroupInfoDao netGroup;
+
+	@Override
+	public List<NetGroupInfo> listDataSourceInfoListByConditions(
+			NetGroupInfo source) {
+		return netGroup.listDataSourceInfoListByConditions(source);
+	}
+
+	@Override
+	public void delete(NetGroupInfo entity) {
+		netGroup.delete(entity);
+	}
+
+	@Override
+	public void deleteById(Long id) {
+		netGroup.deleteById(id);
+	}
+
+	@Override
+	public NetGroupInfo getById(Long id) {
+		return netGroup.getById(id);
+	}
+
+	public void saveOrUpdate(NetGroupInfo entity) {
+		netGroup.insert(entity);
+	}
+
+	@Override
+	public void update(NetGroupInfo entity) {
+		netGroup.update(entity);
+	}
+
+}

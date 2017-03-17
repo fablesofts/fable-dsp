@@ -1,0 +1,308 @@
+package com.fable.dsp.controller.network;
+
+import java.io.IOException;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.fable.dsp.common.constants.SysConfigConstants;
+import com.fable.dsp.common.dto.network.NetCardDto;
+import com.fable.dsp.common.util.LocalNetworkInfoUtil;
+import com.fable.dsp.common.util.SysConfigUtil;
+import com.fable.dsp.dmo.system.config.SysConfigInfo;
+import com.fable.dsp.dmo.system.networkcfg.NetworkGapInfo;
+import com.fable.dsp.dmo.system.networkcfg.NetworkInnInfo;
+import com.fable.dsp.dmo.system.networkcfg.NetworkOutInfo;
+import com.fable.dsp.service.system.config.intf.SysConfigInfoService;
+import com.fable.dsp.service.system.network.intf.NetGroupInfoService;
+import com.fable.dsp.service.system.network.intf.NetworkGapInfoService;
+import com.fable.dsp.service.system.network.intf.NetworkInnInfoService;
+import com.fable.dsp.service.system.network.intf.NetworkOutInfoService;
+import com.fable.hamal.shuttle.common.utils.StringUtil;
+
+/**
+ * 数据源信息
+ * 
+ * @author 吴浩
+ */
+@Controller
+@RequestMapping("/networkCfg")
+public class NetworkCfgInfoController {
+
+	private static final Logger logger = LoggerFactory
+			.getLogger(NetworkCfgInfoController.class);
+
+	/**
+	 * 内交换
+	 */
+	@Autowired
+	NetworkInnInfoService networkCfgInfoService;
+	@Autowired
+	SysConfigInfoService sysConfigInfoService;
+	/**
+     * 
+     */
+	@Autowired
+	NetGroupInfoService netGroupInfoService;
+	/**
+	 * 网闸
+	 */
+	@Autowired
+	NetworkGapInfoService networkGapService;
+	/**
+	 * 外交换
+	 */
+	@Autowired
+	NetworkOutInfoService networkOutService;
+
+	@RequestMapping("/network_new")
+	public String maintain() {
+		return "networkcfg/network-config";
+	}
+
+	/**
+	 * @author majy 将外服务器的网卡信息保存到数据库
+	 * @param
+	 * @return
+	 */
+	@RequestMapping("/saveOutServer")
+	@ResponseBody
+	public Map<String, Object> saveOutServer(NetworkOutInfo networkOutInfo) {
+		Map<String, Object> rt = new HashMap<String, Object>();
+		try {
+
+			SysConfigInfo sysConfigInfo = sysConfigInfoService
+					.getSysConfigInfoByName(SysConfigConstants.OUTER_RMI_ADDRESS);
+			String value = networkOutInfo.getTo_gap_ip() + ":"
+					+ sysConfigInfo.getSysConfigValue().split(":")[1];
+			sysConfigInfo.setSysConfigValue(value);
+			this.sysConfigInfoService.update(sysConfigInfo);
+			NetCardDto outCard = new NetCardDto(
+					networkOutInfo.getNow_outer_card(),
+					networkOutInfo.getTo_outernet_ip(),
+					networkOutInfo.getTo_outernet_mask(),
+					networkOutInfo.getTo_outernet_gateway());
+			NetCardDto gapCard = new NetCardDto(
+					networkOutInfo.getNow_gap_card(),
+					networkOutInfo.getTo_gap_ip(),
+					networkOutInfo.getTo_gap_mask(),
+					networkOutInfo.getTo_gap_gateway());
+			this.networkOutService.effictNetCard(outCard);
+			this.networkOutService.effictNetCard(gapCard);
+			NetworkOutInfo temp = this.networkOutService.findByCardInfo(
+					gapCard.getName(), outCard.getName());
+			if (temp == null) {
+				networkOutInfo.setCreateTime(new Date());
+				this.networkOutService.insert(networkOutInfo);
+			} else {
+				networkOutInfo.setId(temp.getId());
+				this.networkOutService.update(temp);
+			}
+			SysConfigUtil.setConfigMap(null);
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			rt.put("flag", false);
+			rt.put("msg", "失败");
+		}
+		rt.put("flag", true);
+		rt.put("msg", "成功");
+		return rt;
+	}
+
+	/**
+	 * @author majy
+	 * @return
+	 */
+	@RequestMapping("/showLastOutServer")
+	@ResponseBody
+	public Map<String, Object> showOutServer() {
+		Map<String, Object> rt = new HashMap<String, Object>();
+		NetworkOutInfo outServer = this.networkOutService
+				.getLastNetWorkOutInfo();
+		rt.put("outServer", outServer);
+		return rt;
+	}
+
+	/**
+	 * @author majy
+	 * @return
+	 */
+	@RequestMapping("/showLastInServer")
+	@ResponseBody
+	public Map<String, Object> showInServer() {
+		Map<String, Object> rt = new HashMap<String, Object>();
+		NetworkInnInfo innInfo = this.networkCfgInfoService.getLastEntity();
+		rt.put("inServer", innInfo);
+		return rt;
+	}
+
+	/**
+	 * @author gongg
+	 * @param
+	 * @return
+	 */
+	@RequestMapping("/saveInServer")
+	@ResponseBody
+	public Map<String, Object> saveInServer(NetworkInnInfo networkInnInfo) {
+		Map<String, Object> rt = new HashMap<String, Object>();
+		try {
+			// 设置内服务器网卡（内）信息
+			// 截取网络连接名称
+			String nowInnCard = networkInnInfo.getNow_inn_card();
+			String nameInner = nowInnCard
+					.substring(nowInnCard.indexOf("-") + 1)
+					.replaceAll("-", " ");
+			String ipInner = networkInnInfo.getTo_innernet_ip();
+			String subcodeInner = networkInnInfo.getTo_innernet_mask();
+			String gatewayInner = networkInnInfo.getTo_innernet_gateway();
+			// 设置网卡（内）
+			String msgInner = LocalNetworkInfoUtil.updateNetCard(nameInner,
+					ipInner, subcodeInner, gatewayInner);
+			if (!StringUtil.isEmpty(msgInner)) {
+				rt.put("flag", false);
+				rt.put("msg", msgInner);
+				return rt;
+			}
+
+			// 设置内服务器网卡（外）信息
+			// 截取网络连接名称
+			String nowOutCard = networkInnInfo.getNow_out_card();
+			String nameOuter = nowOutCard
+					.substring(nowOutCard.indexOf("-") + 1)
+					.replaceAll("-", " ");
+			String ipOuter = networkInnInfo.getTo_gap_ip();
+			String subcodeOuter = networkInnInfo.getTo_gap_mask();
+			String gatewayOuter = networkInnInfo.getTo_gap_gateway();
+
+			// 设置网卡（外）
+			String msgOuter = LocalNetworkInfoUtil.updateNetCard(nameOuter,
+					ipOuter, subcodeOuter, gatewayOuter);
+			if (!StringUtil.isEmpty(msgOuter)) {
+				rt.put("flag", false);
+				rt.put("msg", msgOuter);
+				return rt;
+			}
+
+			// 更新网卡信息到数据库
+			this.networkCfgInfoService.saveOrUpdate(networkInnInfo);
+			SysConfigUtil.setConfigMap(null);
+			rt.put("flag", true);
+			rt.put("msg", "成功");
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			rt.put("flag", false);
+			rt.put("msg", "失败");
+		}
+
+		return rt;
+	}
+
+	/**
+	 * @author majy 获取数据库中的信息
+	 * @return
+	 */
+	@RequestMapping("/showLastGap")
+	@ResponseBody
+	public Map<String, Object> showLastGap() {
+		Map<String, Object> rt = new HashMap<String, Object>();
+		NetworkGapInfo networkGapInfo = this.networkGapService.getById(1L);
+		rt.put("gap", networkGapInfo);
+		return rt;
+	}
+
+	/**
+	 * @author majy 将网闸信息保存到数据库
+	 * @param
+	 * @return
+	 */
+	@RequestMapping("/saveExchangeServer")
+	@ResponseBody
+	public Map<String, Object> saveExchangeServer(NetworkGapInfo networkGapInfo) {
+		Map<String, Object> rt = new HashMap<String, Object>();
+		try {
+			networkGapInfo.setId(1L);
+			this.networkGapService.saveOrUpdate(networkGapInfo);
+			SysConfigUtil.setConfigMap(null);
+			rt.put("flag", true);
+			rt.put("msg", "成功");
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			rt.put("flag", false);
+			rt.put("msg", "失败");
+		}
+
+		return rt;
+	}
+
+	/**
+	 * @author majy 从本机上获取网卡信息
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("/getCardInfo")
+	public List<NetCardDto> scanInServerFromLocalMachine() throws IOException {
+		List<NetCardDto> list = new LinkedList<NetCardDto>();
+		List<NetCardDto> cardList = LocalNetworkInfoUtil.getNetCard();
+		for (NetCardDto netCardDto : cardList) {
+			list.add(netCardDto);
+		}
+		return list;
+	}
+
+	/**
+	 * @author majy 通过远程方法调用获取网卡信息
+	 * @return
+	 */
+	@ResponseBody
+	@RequestMapping("/getRmiCardInfo")
+	public List<NetCardDto> getOuterServerFromRmi() throws IOException {
+		List<NetCardDto> list = new LinkedList<NetCardDto>();
+		@SuppressWarnings("unchecked")
+		List<NetCardDto> cardList = this.networkOutService.getOutNetCard();
+		for (NetCardDto netCardDto : cardList) {
+			list.add(netCardDto);
+		}
+		return list;
+	}
+
+	/**
+	 * @author majy 使网卡修改生效
+	 */
+	@ResponseBody
+	@RequestMapping("/effiectCard")
+	public Boolean effiectCard(NetCardDto cardDto) {
+		boolean rt = false;
+		try {
+			LocalNetworkInfoUtil.effictNetCard(cardDto);
+			rt = true;
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		return rt;
+	}
+
+	/**
+	 * @author majy 通过远程方法调用使网卡修改生效
+	 */
+	@ResponseBody
+	@RequestMapping("/effiectRmiCard")
+	public Boolean effiectRmiCard(NetCardDto cardDto) {
+		boolean rt = false;
+		try {
+			this.networkOutService.effictNetCard(cardDto);
+			rt = true;
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+		}
+		return rt;
+	}
+}

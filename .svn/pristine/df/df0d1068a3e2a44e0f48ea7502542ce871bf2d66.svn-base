@@ -1,0 +1,35 @@
+package com.fable.dsp.service.system.network.intf;
+
+import java.util.List;
+
+import com.fable.dsp.common.dto.network.NetworkInfo;
+import com.fable.dsp.core.service.GenericService;
+import com.fable.dsp.dmo.system.networkcfg.NetGroupInfo;
+import com.fable.dsp.dmo.system.networkcfg.NetworkGapInfo;
+import com.fable.dsp.dmo.system.networkcfg.NetworkInnInfo;
+
+public interface NetworkGapInfoService extends GenericService<NetworkGapInfo> {
+	/**
+	 * 通过条件查找多条
+	 * 
+	 * @param InterestInfo
+	 * @return List
+	 */
+	List<NetworkGapInfo> listDataSourceInfoListByConditions(NetworkGapInfo source);
+	
+	/**
+	 * 按条件修改
+	 * @param entity
+	 * @return
+	 */
+	boolean updateByConditions(NetworkInfo entity);
+
+	/**
+	 * 添加或修改方法
+	 * 
+	 * @param gap
+	 */
+	void saveOrUpdate(NetworkGapInfo gap);
+	
+
+}

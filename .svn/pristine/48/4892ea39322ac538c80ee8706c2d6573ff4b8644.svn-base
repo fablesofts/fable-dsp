@@ -1,0 +1,384 @@
+package com.fable.dsp.service.system.network.impl;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Properties;
+import java.util.Set;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.fable.dsp.common.constants.CommonConstants;
+import com.fable.dsp.common.dto.network.NetworkInfo;
+import com.fable.dsp.common.util.NetworkCard;
+import com.fable.dsp.core.service.GenericServiceImpl;
+import com.fable.dsp.dao.system.network.intf.NetworkInnInfoDao;
+import com.fable.dsp.dmo.system.networkcfg.NetworkInnInfo;
+import com.fable.dsp.service.system.network.intf.NetworkInnInfoService;
+
+/**
+ * 网络配置（内交换）.
+ * 
+ * @author Administrator
+ */
+@Service("networkCfgInfoService")
+public class NetworkCfgInfoServiceImpl extends
+		GenericServiceImpl<NetworkInnInfo> implements NetworkInnInfoService {
+	
+	private static final Logger logger = LoggerFactory
+			.getLogger(NetworkCfgInfoServiceImpl.class);
+	/**
+	 * 数据层NetworkInnInfoDao接口.
+	 */
+	@Autowired
+	NetworkInnInfoDao networkCfg;
+
+	private final String m_osconfirm = "确定";
+
+	private final String m_success = "启动成功。|";
+
+	private final String m_defeat = "启动失败。|";
+
+	String m_cardname = null;
+
+	public void saveOrUpdate(final NetworkInnInfo entity) {
+		this.networkCfg.saveOrUpdate(entity);
+	}
+
+	/**
+	 * 使IP生效.
+	 * 
+	 * @param entity
+	 *            交换信息实体类
+	 * @return String 返回生效的结果信息
+	 */
+	@Override
+	public String getInneripVaild(final NetworkInfo entity) {
+		final Properties props = System.getProperties(); // 系统属性
+		final StringBuffer info = new StringBuffer("");
+		String cmd = "";
+		String cmd2 = "";
+		String mess = null;
+		m_cardname = entity.getCard_inner();
+		// 判断系统类型
+		if (props.getProperty("os.name").indexOf(
+				CommonConstants.OS_TYPE_WINDOWS) != -1) {
+			String message;
+			try {
+				// IP与mask的非空验证
+				if (entity.getServer_ip() != null && entity.getMask() != null) {
+					// 网关是否为空，执行的语句不同
+					if (!"".equals(entity.getGateway())
+							&& null != entity.getGateway())
+						cmd = CommonConstants.IP_VAILD_PATH_WINDWOS + "\""
+								+ m_cardname.trim() + "\" "
+								+ entity.getServer_ip() + " "
+								+ entity.getMask() + " " + entity.getGateway();
+					else
+						cmd = CommonConstants.IP_VAILD_PATH_WINDWOS + "\""
+								+ m_cardname.trim() + "\" "
+								+ entity.getServer_ip() + " "
+								+ entity.getMask();
+					final Process ps = Runtime.getRuntime().exec(cmd);
+					final BufferedReader br = new BufferedReader(
+							new InputStreamReader(ps.getInputStream()));
+					while ((message = br.readLine()) != null)
+						if (message.indexOf(this.m_osconfirm) != -1)
+							info.append("");
+						else
+							info.append(message);
+				}
+
+			} catch (final IOException e) {
+				e.printStackTrace();
+			} finally {
+				// IP生效后，和系统IP进行对比，查看是否一致
+				mess = this.getNetworkCardSucceed(entity);
+			}
+		} else {
+			String message;
+			Process ps = null;
+			BufferedReader br = null;
+			try {
+				// IP与mask的非空验证
+				if (entity.getServer_ip() != null && entity.getMask() != null) {
+					// 网关是否为空，执行的语句不同
+					if (!"".equals(entity.getGateway())
+							&& null != entity.getGateway())
+						cmd = CommonConstants.IP_VAILD_PATH_LINUX_IPSET
+								+ m_cardname + " " + entity.getServer_ip()
+								+ " " + entity.getMask() + " "
+								+ entity.getGateway();
+					else
+						cmd = CommonConstants.IP_VAILD_PATH_LINUX_IPSET
+								+ m_cardname + " " + entity.getServer_ip()
+								+ " " + entity.getMask() + " null";
+
+					System.out.println("cmd执行命令：" + cmd);
+					ps = Runtime.getRuntime().exec(cmd);
+					br = new BufferedReader(new InputStreamReader(
+							ps.getInputStream()));
+					while ((message = br.readLine()) != null) {
+						System.out.println(message);
+						// 是否存在相同IP
+						if (message.contains("Ipaddres")
+								&& message.contains("has exist"))
+							return mess = "has exist";
+						// 获取是否成功
+						if (message.contains("errorcode")) {
+							String[] messages = message.split(",");
+							String successMess = messages[0].split(":")[1];
+							if ("0".equals(successMess.trim()))
+								mess = m_cardname + this.m_success;
+							else
+								mess = m_cardname + this.m_defeat;
+						}
+					}
+
+				}
+			} catch (final IOException e) {
+				e.printStackTrace();
+			} finally {
+				System.out.println("************IP生效入库**************");
+				// IP生效后，和系统IP进行对比，查看是否一致
+				if (mess.contains("成功"))
+					networkCfg.updateByConditions(entity);
+			}
+
+		}
+
+		return mess;
+	}
+
+	/**
+	 * 自动获取所有网卡.
+	 * 
+	 * @return Map(返回网卡的集合，Key网卡名称，value数组[ip,mask,gateway])
+	 */
+	@Override
+	public Map getInnerNetwork() {
+		return NetworkCard.getNetworkCard();
+	}
+
+	/**
+	 * 展示内交换网卡信息.
+	 * 
+	 * @param innId
+	 *            （内交换id）
+	 * @return NetworkInnInfo(返回封装后的内交换信息)
+	 */
+	@Override
+	public NetworkInnInfo showInnerNetwork(final Long innId) {
+		final Map netMap = this.getInnerNetwork(); // 获取所有的网卡信息（ip，掩码，网关）
+		final List<String> networkList = new ArrayList<String>();
+		NetworkInnInfo nif = null;
+		if (innId != null)
+			nif = this.getById(innId);
+		else
+			nif = new NetworkInnInfo();
+
+		int i = 0;
+		final Set<Map.Entry<String, String[]>> set = netMap.entrySet();
+		for (final Entry<String, String[]> entry2 : set) {
+			final Map.Entry<String, String[]> entry = entry2;
+			i++;
+
+			if (nif.getNow_out_card() == null && nif.getNow_inn_card() == null) {
+				if (i == 1) {
+					nif.setTo_innernet_ip(entry.getValue()[0]);
+					nif.setTo_innernet_mask(entry.getValue()[1]);
+					nif.setTo_innernet_gateway(entry.getValue()[2]);
+					nif.setNow_inn_card(entry.getKey());
+				} else if (i == 2) {
+					nif.setTo_gap_ip(entry.getValue()[0]);
+					nif.setTo_gap_mask(entry.getValue()[1]);
+					nif.setTo_gap_gateway(entry.getValue()[2]);
+					nif.setNow_out_card(entry.getKey());
+				}
+			}
+
+			if (nif.getNow_out_card() != null
+					&& nif.getNow_out_card().equals(entry.getKey())) {
+				// 如果读取的IP与数据库匹配的一致，则保存
+				nif.setTo_gap_ip(entry.getValue()[0]);
+				nif.setTo_gap_mask(entry.getValue()[1]);
+				nif.setTo_gap_gateway(entry.getValue()[2]);
+				nif.setNow_out_card(entry.getKey());
+			}
+
+			if (nif.getNow_inn_card() != null
+					&& nif.getNow_inn_card().equals(entry.getKey())) {
+				// 如果读取的IP与数据库匹配的一致，则保存
+				nif.setTo_innernet_ip(entry.getValue()[0]);
+				nif.setTo_innernet_mask(entry.getValue()[1]);
+				nif.setTo_innernet_gateway(entry.getValue()[2]);
+				nif.setNow_inn_card(entry.getKey());
+			}
+
+			nif.setId(innId); // ID封装到实体类
+			networkList.add(entry.getKey());
+			logger.debug(entry.getKey() + "--->" + entry.getValue()[0]
+					+ "," + entry.getValue()[1] + "," + entry.getValue()[2]);
+		}
+
+		this.formatNetworkCard(nif, netMap);
+		return nif;
+	}
+
+	@Override
+	public List<NetworkInnInfo> listDataSourceInfoListByConditions(
+			final NetworkInnInfo source) {
+		return this.networkCfg.listDataSourceInfoListByConditions(source);
+	}
+
+	/**
+	 * 获取内交换上的网卡数量.
+	 * 
+	 * @return List
+	 */
+	@Override
+	public List<String> getNetCard() {
+		final Map netMap = this.getInnerNetwork();
+		final List<String> networkList = new ArrayList<String>();
+		final Set<Map.Entry<String, String[]>> set = netMap.entrySet();
+		for (final Entry<String, String[]> entry2 : set) {
+			final Map.Entry<String, String[]> entry = entry2;
+			networkList.add(entry.getKey());
+			System.out.println(entry.getKey() + "--->" + entry.getValue()[0]
+					+ "," + entry.getValue()[1] + "," + entry.getValue()[2]);
+		}
+		return networkList;
+	}
+
+	/**
+	 * 网卡启动成功的验证.
+	 * 
+	 * @param entity
+	 * @return String(验证结果)
+	 */
+	private String getNetworkCardSucceed(final NetworkInfo entity) {
+		final Map netMap = this.getInnerNetwork();
+		final StringBuffer sb = new StringBuffer("");
+		final Set<Map.Entry<String, String[]>> set = netMap.entrySet();
+		for (final Entry<String, String[]> entry2 : set) {
+			final Map.Entry<String, String[]> entry = entry2;
+
+			System.out.println(entry.getKey() + "--->" + entry.getValue()[0]
+					+ "," + entry.getValue()[1] + "," + entry.getValue()[2]);
+
+			System.out.println(entry.getValue()[2] + "<--->"
+					+ entity.getGateway());
+
+			if (entry.getValue().length >= 2) {
+				if (entry.getKey().equals(m_cardname)
+						&& entity.getServer_ip().trim()
+								.equals(entry.getValue()[0])
+						&& entity.getMask().equals(entry.getValue()[1]))
+					if (entry.getValue()[2] == null
+							&& "".equals(entity.getGateway()))
+						sb.append(entry.getKey() + this.m_success);
+					else if (entity.getGateway().equals(entry.getValue()[2]))
+						sb.append(entry.getKey() + this.m_success);
+					else if ("".equals(entity.getGateway())
+							|| entity.getGateway() == null) // 配置上如果网卡为空，就直接报成功
+						sb.append(entry.getKey() + this.m_success);
+					else
+						sb.append(entry.getKey() + this.m_defeat);
+
+			} else
+				sb.append(entry.getKey() + this.m_defeat);
+
+		}
+
+		if (sb.toString().contains("成功"))
+			networkCfg.updateByConditions(entity);
+
+		return sb.toString();
+	}
+
+	/**
+	 * 根据条件修改
+	 * 
+	 * @param entity
+	 * @return
+	 */
+	@Override
+	public boolean updateByConditions(NetworkInfo entity) {
+
+		return networkCfg.updateByConditions(entity);
+	}
+
+	/**
+	 * 如果之前保存的网卡不存在，将网卡信息清空
+	 * 
+	 * @param nif
+	 * @param netMap
+	 */
+	private NetworkInnInfo formatNetworkCard(NetworkInnInfo nif,
+			Map<String, String[]> netMap) {
+		String inner = null;
+		String outer = null;
+		final Set<Map.Entry<String, String[]>> set = netMap.entrySet();
+		for (final Entry<String, String[]> entry2 : set) {
+			final Map.Entry<String, String[]> entry = entry2;
+			if (entry.getKey().equals(nif.getNow_inn_card()))
+				inner = entry.getKey();
+			if (entry.getKey().equals(nif.getNow_out_card()))
+				outer = entry.getKey();
+		}
+		System.out.println("***inner=" + inner + "*****outer=" + outer + "***");
+		final Set<Map.Entry<String, String[]>> set1 = netMap.entrySet();
+		for (final Entry<String, String[]> entry2 : set1) {
+			final Map.Entry<String, String[]> entry = entry2;
+
+			if (inner == null && !entry.getKey().equals(nif.getNow_out_card())) {
+				nif.setTo_innernet_ip(entry.getValue()[0]);
+				nif.setTo_innernet_mask(entry.getValue()[1]);
+				nif.setTo_innernet_gateway(entry.getValue()[2]);
+				nif.setNow_inn_card(entry.getKey());
+			}
+			if (outer == null && !entry.getKey().equals(nif.getNow_inn_card())) {
+				nif.setTo_gap_ip(entry.getValue()[0]);
+				nif.setTo_gap_mask(entry.getValue()[1]);
+				nif.setTo_gap_gateway(entry.getValue()[2]);
+				nif.setNow_out_card(entry.getKey());
+			}
+		}
+
+		return nif;
+	}
+
+	@Override
+	public NetworkInfo getOneCard(String card) {
+		final Map netMap = this.getInnerNetwork(); // 获取所有的网卡信息（ip，掩码，网关）
+		NetworkInfo netcard = new NetworkInfo();
+		final Set<Map.Entry<String, String[]>> set = netMap.entrySet();
+		for (final Entry<String, String[]> entry2 : set) {
+			final Map.Entry<String, String[]> entry = entry2;
+			if (entry.getKey().trim().equals(card.trim())) {
+				netcard.setServer_ip(entry.getValue()[0]);
+				netcard.setMask(entry.getValue()[1]);
+				netcard.setGateway(entry.getValue()[2]);
+			}
+		}
+		return netcard;
+	}
+
+	@Override
+	public NetworkInnInfo getLastEntity() {
+		Iterator<NetworkInnInfo> networkInnInfos = this.networkCfg.findAll()
+				.iterator();
+		NetworkInnInfo temp = null;
+		while (networkInnInfos.hasNext()) {
+			temp = networkInnInfos.next();
+		}
+		return temp;
+	}
+}

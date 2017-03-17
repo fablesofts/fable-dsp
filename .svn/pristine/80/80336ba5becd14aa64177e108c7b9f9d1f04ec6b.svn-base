@@ -1,0 +1,247 @@
+package com.fable.dsp.dmo.system.networkcfg;
+
+import java.io.Serializable;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
+import javax.persistence.TableGenerator;
+
+import com.fable.dsp.core.entity.AuditEntity;
+
+@Entity
+@Table(name = "NET_OUTER_CONFIG")
+public class NetworkOutInfo extends AuditEntity implements Serializable {
+
+	private static final long serialVersionUID = 6876861026595154798L;
+
+	/**
+	 * ID编号
+	 */
+	@TableGenerator(name = "netOuterConfigGen", table = "SYS_ID_GEN", pkColumnName = "GEN_KEY", valueColumnName = "GEN_VALUE", pkColumnValue = "NET_OUTER_CONFIG_ID", allocationSize = 1)
+	@Id
+	@GeneratedValue(strategy = GenerationType.TABLE, generator = "netOuterConfigGen")
+	protected Long id;
+
+	@Column(name = "NET_NAME")
+	protected String net_name;
+	/**
+	 * 外交换对网闸IP
+	 */
+	@Column(name = "TO_GAP_IP")
+	protected String to_gap_ip;
+	/**
+	 * 外交换对网闸MASK
+	 */
+	@Column(name = "TO_GAP_MASK")
+	protected String to_gap_mask;
+	/**
+	 * 外交换对网闸GATEWAY
+	 */
+	@Column(name = "TO_GAP_GATEWAY")
+	protected String to_gap_gateway;
+	/**
+	 * 内交换对外网IP
+	 */
+	@Column(name = "TO_OUTERNET_IP")
+	protected String to_outernet_ip;
+	/**
+	 * 内交换对外网MASK
+	 */
+	@Column(name = "TO_OUTERNET_MASK")
+	protected String to_outernet_mask;
+	/**
+	 * 内交换对外网GATEWAY
+	 */
+	@Column(name = "TO_OUTERNET_GATEWAY")
+	protected String to_outernet_gateway;
+	/**
+	 * 保存对网闸的网卡名称
+	 */
+	@Column(name = "NOW_GAP_CARD")
+	protected String now_gap_card;
+	/**
+	 * 保存对外网的网卡名称
+	 */
+	@Column(name = "NOW_OUTER_CARD")
+	protected String now_outer_card;
+	
+	/**
+     * 数据交换端口.
+     */
+    @Column(name="SERVICE_PORT")
+    protected Long servicePort;
+    
+    /**
+     * 应用服务代理对内端口.
+     */
+    @Column(name="INNER_PROXY_PORT")
+    protected Long innerProxyPort;
+    
+    /**
+     * 应用服务代理对外端口.
+     */
+    @Column(name="OUTER_PROXY_PORT")
+    protected Long outerProxyPort;
+	
+    
+	@Column(name="STATUS")
+	protected String status;
+
+	@Column(name = "TYPE")
+	protected String type;
+
+	@Column(name = "EXT")
+	protected String ext;
+
+	@Column(name = "DEL_FLAG")
+	protected String del_flag;
+
+	@Override
+	public Long getId() {
+		return id;
+	}
+
+	@Override
+	public void setId(Long id) {
+		this.id = id;
+	}
+
+	public String getNet_name() {
+		return net_name;
+	}
+
+	public void setNet_name(String net_name) {
+		this.net_name = net_name;
+	}
+
+	public String getTo_gap_ip() {
+		return to_gap_ip;
+	}
+
+	public void setTo_gap_ip(String to_gap_ip) {
+		this.to_gap_ip = to_gap_ip;
+	}
+
+	public String getTo_gap_mask() {
+		return to_gap_mask;
+	}
+
+	public void setTo_gap_mask(String to_gap_mask) {
+		this.to_gap_mask = to_gap_mask;
+	}
+
+	public String getTo_outernet_ip() {
+		return to_outernet_ip;
+	}
+
+	public void setTo_outernet_ip(String to_outernet_ip) {
+		this.to_outernet_ip = to_outernet_ip;
+	}
+
+	public String getTo_outernet_mask() {
+		return to_outernet_mask;
+	}
+
+	public void setTo_outernet_mask(String to_outernet_mask) {
+		this.to_outernet_mask = to_outernet_mask;
+	}
+
+	public String getTo_outernet_gateway() {
+		return to_outernet_gateway;
+	}
+
+	public void setTo_outernet_gateway(String to_outernet_gateway) {
+		this.to_outernet_gateway = to_outernet_gateway;
+	}
+
+	public String getStatus() {
+		return status;
+	}
+
+	public void setStatus(String status) {
+		this.status = status;
+	}
+
+	public String getType() {
+		return type;
+	}
+
+	public void setType(String type) {
+		this.type = type;
+	}
+
+	public String getExt() {
+		return ext;
+	}
+
+	public void setExt(String ext) {
+		this.ext = ext;
+	}
+
+	public String getDel_flag() {
+		return del_flag;
+	}
+
+	public void setDel_flag(String del_flag) {
+		this.del_flag = del_flag;
+	}
+
+	public String getTo_gap_gateway() {
+		return to_gap_gateway;
+	}
+
+	public void setTo_gap_gateway(String to_gap_gateway) {
+		this.to_gap_gateway = to_gap_gateway;
+	}
+
+	public String getNow_gap_card() {
+		return now_gap_card;
+	}
+
+	public void setNow_gap_card(String now_gap_card) {
+		this.now_gap_card = now_gap_card;
+	}
+
+	public String getNow_outer_card() {
+		return now_outer_card;
+	}
+
+	public void setNow_outer_card(String now_outer_card) {
+		this.now_outer_card = now_outer_card;
+	}
+
+    
+    public Long getServicePort() {
+        return servicePort;
+    }
+
+    
+    public void setServicePort(Long servicePort) {
+        this.servicePort = servicePort;
+    }
+
+    
+    public Long getInnerProxyPort() {
+        return innerProxyPort;
+    }
+
+    
+    public void setInnerProxyPort(Long innerProxyPort) {
+        this.innerProxyPort = innerProxyPort;
+    }
+
+    
+    public Long getOuterProxyPort() {
+        return outerProxyPort;
+    }
+
+    
+    public void setOuterProxyPort(Long outerProxyPort) {
+        this.outerProxyPort = outerProxyPort;
+    }
+	
+}
